@@ -182,6 +182,32 @@ img, svg { display: block; }
   height: clamp(34px, 9vw, 42px);
 }
 
+.swipe-user-menu {
+  position: absolute;
+  left: clamp(16px, 5vw, 22px);
+  top: 50%;
+  z-index: 40;
+  transform: translateY(-50%);
+}
+
+.swipe-user-button {
+  display: block;
+  border-radius: 999px;
+}
+
+.swipe-user-menu .swipe-avatar {
+  position: static;
+}
+
+.swipe-menu-popover {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 10px);
+  width: min(72vw, 220px);
+  overflow: hidden;
+  border-radius: 18px;
+}
+
 .swipe-status {
   z-index: 10;
   display: flex;
@@ -1023,6 +1049,14 @@ img, svg { display: block; }
     left: 36px;
     width: 48px;
     height: 48px;
+  }
+
+  .swipe-user-menu {
+    left: 36px;
+  }
+
+  .swipe-menu-popover {
+    width: 240px;
   }
 
   .swipe-deck {

@@ -68,7 +68,6 @@ export function SwipeDeck() {
 
   const queue = availableGroups.filter((g) => !localSwiped.includes(g.id))
   const topGroup = queue[0]
-  const nextGroup = queue[1]
 
   function handleSwipe(groupId: string, direction: 'left' | 'right') {
     setLocalSwiped((prev) => [...prev, groupId])
@@ -104,12 +103,6 @@ export function SwipeDeck() {
     <div className="figma-main swipe-deck figma-scroll">
       <div className="swipe-deck-inner">
         <div className="swipe-card-stage">
-          {nextGroup && (
-            <div className="absolute inset-0 scale-[0.94] translate-y-3">
-              <GroupCard group={nextGroup} onSwipe={() => {}} isTop={false} />
-            </div>
-          )}
-
           <AnimatePresence>
             <motion.div
               key={topGroup.id}

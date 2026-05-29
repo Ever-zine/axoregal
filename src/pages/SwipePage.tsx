@@ -32,27 +32,29 @@ export function SwipePage() {
 
   return (
     <PageTransition>
-    <div className="flex flex-col h-full bg-bg overflow-hidden">
-      <header className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b-[2px] border-black">
-        <span className="text-cuphead-lg text-2xl text-secondary">Axoregal</span>
+    <div className="figma-screen swipe-screen">
+    <div className="figma-screen-bg" />
+    <div className="figma-page swipe-page">
+      <header className="swipe-header">
+        <span className="figma-brand swipe-brand text-secondary">Axoregal</span>
 
-        <div ref={menuRef} className="relative">
+        <div ref={menuRef} className="swipe-user-menu">
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Menu utilisateur"
-            className="focus:outline-none"
+            className="swipe-user-button"
           >
             {user?.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full border-cup object-cover" />
+              <img src={user.avatar} alt={user.name} className="swipe-avatar rounded-full border-cup object-cover" />
             ) : (
-              <div className="w-10 h-10 rounded-full border-cup bg-primary flex items-center justify-center font-display text-base text-text">
+              <div className="swipe-avatar rounded-full border-cup bg-primary flex items-center justify-center font-display text-base text-text">
                 {user?.name.charAt(0).toUpperCase()}
               </div>
             )}
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-12 z-50 min-w-[180px] bg-surface border-cup rounded-2xl shadow-cup-card overflow-hidden">
+            <div className="swipe-menu-popover border-cup bg-surface shadow-cup-card">
               <div className="px-4 py-3 border-b-[2px] border-black">
                 <p className="font-display text-sm text-text truncate">{user?.name}</p>
                 <p className="text-xs text-muted truncate">{user?.email}</p>
@@ -71,9 +73,9 @@ export function SwipePage() {
       <SwipeDeck />
 
       {!group && availableGroups.length > 0 && (
-        <div className="flex-shrink-0 px-5 pb-3">
+        <div className="swipe-surprise">
           <button
-            className="w-full bg-surface border-cup rounded-2xl shadow-cup-btn btn-press font-display text-sm text-secondary uppercase py-3"
+            className="figma-button swipe-surprise-button bg-surface text-secondary"
             onClick={() => navigate('/surprise')}
           >
             🎲 Surprends-moi
@@ -82,6 +84,7 @@ export function SwipePage() {
       )}
 
       <BottomNav />
+    </div>
     </div>
     </PageTransition>
   )
