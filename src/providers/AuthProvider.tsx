@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { signIn, signOut } from '@/services/auth'
+import { signIn, signOut, syncMicrosoftAvatar } from '@/services/auth'
 
 export interface AuthUser {
   id: string
@@ -30,21 +30,50 @@ function toAuthUser(supabaseUser: User): AuthUser {
   }
 }
 
+async function resolveAvatar(userId: string, fallback: string | null): Promise<string | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', userId)
+    .maybeSingle()
+  return data?.avatar_url ?? fallback
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Charge la session existante au démarrage
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ? toAuthUser(session.user) : null)
+    async function applySession(supabaseUser: User | undefined) {
+      if (!supabaseUser) {
+        setUser(null)
+        setIsLoading(false)
+        return
+      }
+      const base = toAuthUser(supabaseUser)
+      setUser(base)
+      const avatar = await resolveAvatar(supabaseUser.id, base.avatar)
+      setUser((prev) => prev ? { ...prev, avatar } : prev)
       setIsLoading(false)
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      applySession(session?.user)
     })
 
-    // Écoute les changements de session (login, logout, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? toAuthUser(session.user) : null)
-      setIsLoading(false)
+    let avatarSynced = false
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.provider_token && session.user && !avatarSynced) {
+        avatarSynced = true
+        syncMicrosoftAvatar(session.user.id, session.provider_token)
+          .then(() => resolveAvatar(session.user!.id, null))
+          .then((avatar) => {
+            if (avatar) setUser((prev) => prev ? { ...prev, avatar } : prev)
+          })
+          .catch(() => {})
+      }
+      applySession(session?.user)
     })
 
     return () => subscription.unsubscribe()

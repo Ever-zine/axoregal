@@ -1,9 +1,31 @@
 -- ============================================================
--- Axoregal — schéma complet
+-- Axoregal — reset complet + recréation du schéma
+-- ⚠️  Supprime toutes les données existantes
 -- ============================================================
 
--- Profils utilisateurs (miroir de auth.users, peuplé par trigger)
-CREATE TABLE IF NOT EXISTS public.profiles (
+-- Supprime les tables dans l'ordre (clés étrangères)
+DROP TABLE IF EXISTS public.messages      CASCADE;
+DROP TABLE IF EXISTS public.swipes        CASCADE;
+DROP TABLE IF EXISTS public.group_members CASCADE;
+DROP TABLE IF EXISTS public.groups        CASCADE;
+DROP TABLE IF EXISTS public.profiles      CASCADE;
+
+-- Supprime les fonctions
+DROP FUNCTION IF EXISTS public.sync_profile()       CASCADE;
+DROP FUNCTION IF EXISTS public.check_and_create_match() CASCADE;
+DROP FUNCTION IF EXISTS public.create_group(UUID, TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.join_random_group(UUID)        CASCADE;
+
+-- Supprime les policies Storage
+DROP POLICY IF EXISTS "Avatars lisibles par tous"              ON storage.objects;
+DROP POLICY IF EXISTS "Utilisateur uploade son propre avatar"  ON storage.objects;
+DROP POLICY IF EXISTS "Utilisateur met à jour son propre avatar" ON storage.objects;
+
+-- ============================================================
+-- Profils utilisateurs
+-- ============================================================
+
+CREATE TABLE public.profiles (
   id         UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   name       TEXT NOT NULL,
   avatar_url TEXT,
@@ -16,7 +38,6 @@ CREATE POLICY "Profils visibles par tous les connectés"
 CREATE POLICY "Chaque utilisateur gère son propre profil"
   ON public.profiles FOR ALL TO authenticated USING (auth.uid() = id);
 
--- Trigger : création/mise à jour du profil à chaque connexion SSO
 CREATE OR REPLACE FUNCTION public.sync_profile()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
@@ -29,7 +50,7 @@ BEGIN
   )
   ON CONFLICT (id) DO UPDATE SET
     name       = EXCLUDED.name,
-    avatar_url = EXCLUDED.avatar_url,
+    avatar_url = COALESCE(EXCLUDED.avatar_url, profiles.avatar_url),
     email      = EXCLUDED.email;
   RETURN NEW;
 END;
@@ -40,10 +61,10 @@ CREATE OR REPLACE TRIGGER on_auth_user_upsert
   FOR EACH ROW EXECUTE FUNCTION public.sync_profile();
 
 -- ============================================================
--- Groupes créés par les utilisateurs
+-- Groupes
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS public.groups (
+CREATE TABLE public.groups (
   id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name         TEXT NOT NULL,
   category_id  TEXT NOT NULL,
@@ -59,7 +80,7 @@ CREATE POLICY "Utilisateur crée un groupe"
   ON public.groups FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = created_by);
 
-CREATE TABLE IF NOT EXISTS public.group_members (
+CREATE TABLE public.group_members (
   id        UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   group_id  UUID REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
   user_id   UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -79,14 +100,17 @@ CREATE POLICY "Utilisateur quitte son groupe"
 
 ALTER PUBLICATION supabase_realtime ADD TABLE public.group_members;
 
--- Swipes journaliers (par groupe, pour ne pas re-proposer les groupes déjà vus)
-CREATE TABLE IF NOT EXISTS public.swipes (
-  id           UUID    DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id      UUID    REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  group_id     UUID    REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
-  direction    TEXT    CHECK (direction IN ('left', 'right')) NOT NULL,
+-- ============================================================
+-- Swipes
+-- ============================================================
+
+CREATE TABLE public.swipes (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id      UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  group_id     UUID REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
+  direction    TEXT CHECK (direction IN ('left', 'right')) NOT NULL,
   swiped_at    TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  session_date DATE    DEFAULT CURRENT_DATE NOT NULL,
+  session_date DATE DEFAULT CURRENT_DATE NOT NULL,
   UNIQUE (user_id, group_id)
 );
 
@@ -99,10 +123,10 @@ CREATE POLICY "Chaque utilisateur modifie ses swipes"
   ON public.swipes FOR UPDATE TO authenticated USING (auth.uid() = user_id);
 
 -- ============================================================
--- Messages de chat
+-- Messages
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS public.messages (
+CREATE TABLE public.messages (
   id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   group_id   UUID REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
   user_id    UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -132,8 +156,7 @@ CREATE POLICY "Membres peuvent envoyer des messages"
 ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
 
 -- ============================================================
--- RPC : créer un groupe (créateur auto-rejoint, SECURITY DEFINER
--- pour garantir l'atomicité group + member)
+-- RPC : créer un groupe
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.create_group(
@@ -157,7 +180,7 @@ END;
 $$;
 
 -- ============================================================
--- RPC : rejoindre un groupe aléatoire (Surprends-moi)
+-- RPC : rejoindre un groupe aléatoire
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.join_random_group(p_user_id UUID)
@@ -168,7 +191,6 @@ DECLARE
   v_category_id TEXT;
   v_name        TEXT;
 BEGIN
-  -- Cherche un groupe du jour que l'utilisateur n'a pas encore swipé ni rejoint
   SELECT g.id, g.category_id, g.name
   INTO v_group_id, v_category_id, v_name
   FROM public.groups g
@@ -184,7 +206,6 @@ BEGIN
   ORDER BY RANDOM()
   LIMIT 1;
 
-  -- Aucun groupe dispo → retourne vide
   IF v_group_id IS NULL THEN
     RETURN;
   END IF;
@@ -200,3 +221,26 @@ BEGIN
   RETURN QUERY SELECT v_group_id, v_category_id, v_name;
 END;
 $$;
+
+-- ============================================================
+-- Storage : policies pour le bucket "avatars"
+-- (créer le bucket manuellement : Storage > New bucket > "avatars" > Public)
+-- ============================================================
+
+CREATE POLICY "Avatars lisibles par tous"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "Utilisateur uploade son propre avatar"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Utilisateur met à jour son propre avatar"
+  ON storage.objects FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
