@@ -8,6 +8,7 @@ interface UseMatchResult {
   isLoading: boolean
   clearGroup: () => void
   leaveGroup: () => Promise<void>
+  setGroup: (g: MatchGroup | null) => void
 }
 
 export function useMatch(): UseMatchResult {
@@ -62,5 +63,5 @@ export function useMatch(): UseMatchResult {
     setGroup(null)
   }, [group, user])
 
-  return { group, isLoading, clearGroup, leaveGroup }
+  return { group, isLoading, clearGroup, leaveGroup, setGroup }
 }

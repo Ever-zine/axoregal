@@ -31,6 +31,11 @@
   --animate-sparkle:     sparkle 0.9s steps(6, end) forwards;
   --animate-match-title: matchTitle 0.6s steps(4, end) forwards;
   --animate-avatar-pop:  avatarPop 0.5s steps(3, end) forwards;
+
+  --animate-tap-pulse:       tapPulse 0.15s steps(3, end) both;
+  --animate-countdown-slam:  countdownSlam 0.35s steps(4, end) both;
+  --animate-victory-flash:   victoryFlash 0.6s steps(4, end) 3;
+  --animate-defeat-dim:      defeatDim 0.5s steps(3, end) forwards;
 }
 
 /* ── Utilitaires CupHead ───────────────────────────────── */
