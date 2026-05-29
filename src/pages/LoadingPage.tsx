@@ -1,7 +1,10 @@
 import './LoadingPage.scss'
 import sandwichGif from '@/assets/SANDWICH 1.gif'
+import soundTitre from '@/assets/Titre.m4a'
 
 export function LoadingPage() {
+    const audio = new Audio(soundTitre)
+    audio.play()
   return (
     <div className="relative flex flex-col items-center justify-center h-full bg-bg gap-8 overflow-hidden">
       <span className="text-cuphead-lg text-5xl text-secondary">Axoregal</span>

@@ -5,6 +5,7 @@ import { createGroup } from '@/services/matching'
 import { useAuth } from '@/providers/AuthProvider'
 import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
+import soundHaha from '@/assets/Haha.m4a'
 
 export function CreateGroupPage() {
   const { user } = useAuth()
@@ -32,6 +33,8 @@ export function CreateGroupPage() {
   }
 
   const handleTroll = useCallback(() => {
+    const audio = new Audio(soundHaha)
+    audio.play()
     setTrollClicks((c) => (c + 1) % 7)
     // Zone sûre : entre 5% et 75% pour éviter les bords et la BottomNav
     const top = `${Math.floor(Math.random() * 70) + 5}%`
