@@ -15,6 +15,7 @@ const ITEMS: NavItem[] = [
   { id: 'create', label: 'Créer', icon: '✚', path: '/create-group', disabledIfGroup: true },
   { id: 'chat',   label: 'Chat',  icon: '♨', path: '/chat', requiresGroup: true },
   { id: 'search', label: 'Resto', icon: '✦', path: '/search' },
+  { id: 'history', label: 'Hist.', icon: '◷', path: '/history' },
 ]
 
 export function BottomNav() {
