@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/providers/AuthProvider'
 import { LoadingPage } from '@/pages/LoadingPage'
 
@@ -7,15 +7,10 @@ interface Props {
 }
 
 export function ProtectedRoute({ children }: Props) {
-  const { isAuthenticated, isLoading, login } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      login()
-    }
-  }, [isLoading, isAuthenticated, login])
-
-  if (isLoading || !isAuthenticated) return <LoadingPage />
+  if (isLoading) return <LoadingPage />
+  if (!isAuthenticated) return <Navigate to="/login" replace />
 
   return <>{children}</>
 }
