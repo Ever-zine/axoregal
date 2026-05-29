@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { LoadingPage } from './LoadingPage'
+import soundTitre from '@/assets/Titre.m4a'
 
 export function AuthCallbackPage() {
   const navigate = useNavigate()
@@ -24,6 +25,13 @@ export function AuthCallbackPage() {
           if (event === 'SIGNED_IN') {
             subscription.unsubscribe()
             navigate('/splash', { replace: true })
+              const audioRef = useRef<HTMLAudioElement | null>(null)
+
+              useEffect(() => {
+                const audio = new Audio(soundTitre)
+                audioRef.current = audio
+                audio.play().catch(() => {})
+              }, [])
           }
         })
       }

@@ -65,7 +65,7 @@ export function MatchPage() {
     enabled: !!groupId,
   })
 
-  if (isLoading || !group) return <LoadingPage />
+  if (isLoading || !group) return
 
   const category = CATEGORIES.find((c) => c.id === group.category_id) ?? CATEGORIES[0]
 

@@ -1,23 +1,14 @@
 import './LoadingPage.scss'
-import { useEffect, useRef } from 'react'
 import sandwichGif from '@/assets/SANDWICH 1.gif'
-import soundTitre from '@/assets/Titre.m4a'
 import imageTitre from '@/assets/Logo.svg'
 
 export function LoadingPage() {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-useEffect(() => {
-  const audio = new Audio(soundTitre)
-  audioRef.current = audio
-  audio.play().catch(() => {})
-}, [])
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full bg-bg gap-8 overflow-hidden">
       <img
         src={imageTitre}
-        className="w-[600px] h-[200px] object-contain"
+        className="w-[600px] h-[50px] object-contain"
         />
 
       <img
