@@ -36,28 +36,18 @@ export const CATEGORIES: Category[] = [
     character: { accessory: 'glasses', bodyRadius: '50%', cheekColor: '#FFCC44' },
   },
   {
-    id: 'tacos', name: 'Tacos', emoji: '🌮',
+    id: 'tacos', name: 'Salade', emoji: '🥬',
     color: '#00E676', bgColor: '#001A0A', anim: 'bounce',
     character: { accessory: 'sombrero', bodyRadius: '50% 50% 44% 44% / 56% 56% 44% 44%', cheekColor: '#66FFAA' },
   },
   {
-    id: 'ramen', name: 'Ramen', emoji: '🍜',
-    color: '#FF4081', bgColor: '#1A000D', anim: 'wiggle',
-    character: { accessory: 'steam', bodyRadius: '48% 48% 52% 52% / 52% 52% 48% 48%', cheekColor: '#FF80AB' },
-  },
-  {
-    id: 'salade', name: 'Salade', emoji: '🥗',
-    color: '#69F0AE', bgColor: '#001A0D', anim: 'bounce',
-    character: { accessory: 'bow', bodyRadius: '50%', cheekColor: '#B9F6CA' },
-  },
-  {
-    id: 'poulet', name: 'Poulet rôti', emoji: '🍗',
+    id: 'poulet', name: 'Poulet', emoji: '🍗',
     color: '#FFAB40', bgColor: '#1A0E00', anim: 'spin',
     character: { accessory: 'comb', bodyRadius: '42% 42% 50% 50% / 50% 50% 50% 50%', cheekColor: '#FFCC80' },
   },
   {
-    id: 'steak', name: 'Steak', emoji: '🥩',
-    color: '#FF5252', bgColor: '#1A0000', anim: 'wiggle',
-    character: { accessory: 'mustache', bodyRadius: '50%', cheekColor: '#FF8A80' },
+    id: 'autre', name: 'Autre', emoji: '❓',
+    color: '#34deeb', bgColor: '#1A0E00', anim: 'spin',
+    character: { accessory: 'comb', bodyRadius: '42% 42% 50% 50% / 50% 50% 50% 50%', cheekColor: '#FFCC80' },
   },
 ]
