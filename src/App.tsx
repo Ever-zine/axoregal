@@ -9,6 +9,7 @@ import { MatchPage } from '@/pages/MatchPage'
 import { SurprisePage } from '@/pages/SurprisePage'
 import { ChatPage } from '@/pages/ChatPage'
 import { SearchPage } from '@/pages/SearchPage'
+import { InstallBanner } from '@/components/InstallBanner/InstallBanner'
 
 export function App() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -16,6 +17,7 @@ export function App() {
   if (isLoading) return null
 
   return (
+    <>
     <Routes>
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route
@@ -33,5 +35,9 @@ export function App() {
         element={isAuthenticated ? <Navigate to="/splash" replace /> : <Navigate to="/login" replace />}
       />
     </Routes>
+
+    {/* Bannière d'installation PWA (PWA-01) — s'affiche au-dessus de la BottomNav */}
+    {isAuthenticated && <InstallBanner />}
+    </>
   )
 }

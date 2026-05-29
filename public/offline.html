@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Axoregal — Hors ligne</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1A0A00;
+      color: #FFF5E1;
+      font-family: 'Nunito', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 24px;
+      padding: 32px;
+      text-align: center;
+    }
+    .emoji { font-size: 80px; animation: spin 2s steps(8) infinite; }
+    h1 {
+      font-size: 2rem;
+      color: #FFD700;
+      text-shadow: 3px 3px 0 #000;
+      -webkit-text-stroke: 1.5px #000;
+    }
+    p { color: #B08060; font-size: 1rem; }
+    button {
+      margin-top: 8px;
+      padding: 12px 32px;
+      background: #FF6B35;
+      color: #FFF5E1;
+      border: 3px solid #000;
+      border-radius: 16px;
+      box-shadow: 3px 3px 0 #000;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="emoji">📡</div>
+  <h1>Tu es hors ligne</h1>
+  <p>Vérifie ta connexion et réessaie.</p>
+  <button onclick="window.location.reload()">Réessayer</button>
+</body>
+</html>

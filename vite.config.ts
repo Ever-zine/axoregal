@@ -20,7 +20,8 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icons/*.png'],
+      includeAssets: ['icons/*.png', 'icons/*.svg'],
+
       manifest: {
         name: 'Axoregal',
         short_name: 'Axoregal',
@@ -34,6 +35,48 @@ export default defineConfig({
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icons/icon.svg',     sizes: 'any',     type: 'image/svg+xml' },
+        ],
+      },
+
+      workbox: {
+        // Page offline servie quand la navigation échoue sans réseau
+        offlineGoogleAnalytics: false,
+        navigateFallback: '/offline.html',
+        navigateFallbackDenylist: [/^\/auth/, /^\/api/],
+
+        // PWA-03 : stratégies de cache runtime
+        runtimeCaching: [
+          {
+            // Supabase API — NetworkFirst : données fraîches prioritaires, fallback cache
+            urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Google Fonts — StaleWhileRevalidate : police servie immédiatement, mise à jour en fond
+            urlPattern: ({ url }) => url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com',
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+          {
+            // Avatars SSO et images externes — CacheFirst : immuables en pratique
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),
