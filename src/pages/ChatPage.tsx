@@ -86,6 +86,7 @@ export function ChatPage() {
           disabled={isLeaving}
         >
           {isLeaving ? '...' : 'Quitter'}
+
         </button>
       </header>
 
