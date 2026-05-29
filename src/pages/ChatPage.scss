@@ -1,0 +1,20 @@
+// SCSS requis : les pseudo-sélecteurs ::-webkit-scrollbar ne sont pas
+// exprimables avec les utilitaires Tailwind standard.
+
+.messages {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 2px;
+  }
+}
+
+// Chaque nouveau message apparaît avec l'animation enregistrée dans @theme
+.message {
+  animation: messageIn 0.2s steps(3, end) both;
+}

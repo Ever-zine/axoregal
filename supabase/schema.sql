@@ -143,6 +143,39 @@ CREATE OR REPLACE TRIGGER on_swipe_match
   FOR EACH ROW EXECUTE FUNCTION public.check_and_create_match();
 
 -- ============================================================
+-- Messages de chat
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.messages (
+  id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  group_id   UUID REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
+  user_id    UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  content    TEXT NOT NULL CHECK (char_length(content) <= 1000),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Messages visibles par les membres du groupe"
+  ON public.messages FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.group_members gm
+      WHERE gm.group_id = messages.group_id AND gm.user_id = auth.uid()
+    )
+  );
+CREATE POLICY "Membres peuvent envoyer des messages"
+  ON public.messages FOR INSERT TO authenticated
+  WITH CHECK (
+    auth.uid() = user_id AND
+    EXISTS (
+      SELECT 1 FROM public.group_members gm
+      WHERE gm.group_id = messages.group_id AND gm.user_id = auth.uid()
+    )
+  );
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+
+-- ============================================================
 -- RPC : rejoindre un groupe aléatoire (Surprends-moi)
 -- ============================================================
 

@@ -60,6 +60,11 @@
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
+@keyframes messageIn {
+  0%   { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+
 @keyframes avatarPop {
   0%   { transform: translateY(30px) scale(0.8); opacity: 0; }
   70%  { transform: translateY(-6px) scale(1.05); opacity: 1; }

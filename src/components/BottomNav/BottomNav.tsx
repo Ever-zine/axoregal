@@ -1,40 +1,39 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useGroup } from '@/providers/GroupProvider'
 
 interface NavItem {
   id: string
   label: string
   icon: string
   path: string
-  chatOnly?: boolean
+  requiresGroup?: boolean
 }
 
 const ITEMS: NavItem[] = [
   { id: 'swipe',    label: 'Swipe',    icon: '🔥', path: '/swipe' },
   { id: 'surprise', label: 'Surprends', icon: '🎲', path: '/surprise' },
-  { id: 'chat',     label: 'Chat',     icon: '💬', path: '/chat', chatOnly: true },
+  { id: 'chat',     label: 'Chat',     icon: '💬', path: '/chat', requiresGroup: true },
   { id: 'search',   label: 'Resto',    icon: '🗺️', path: '/search' },
 ]
 
-interface Props { hasGroup?: boolean }
-
-export function BottomNav({ hasGroup = false }: Props) {
+export function BottomNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { group } = useGroup()
 
   return (
     <nav className="flex-shrink-0 flex border-t-[3px] border-black bg-surface h-[68px] z-[100]">
       {ITEMS.map((item, i) => {
-        const isDisabled = item.chatOnly && !hasGroup
+        const isDisabled = item.requiresGroup && !group
         const isActive = pathname.startsWith(item.path)
 
         return (
           <button
             key={item.id}
             className={[
-              'flex-1 flex flex-col items-center justify-center gap-[3px]',
-              'text-[10px] font-bold uppercase tracking-wider font-body',
+              'flex-1 flex flex-col items-center justify-center gap-[3px] relative',
+              'text-[10px] font-bold uppercase tracking-wider',
               i < ITEMS.length - 1 ? 'border-r-[2px] border-black' : '',
-              'relative transition-colors',
               isActive   ? 'text-secondary bg-[rgba(255,215,0,0.08)]' : 'text-muted',
               isDisabled ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer',
             ].join(' ')}
@@ -42,9 +41,8 @@ export function BottomNav({ hasGroup = false }: Props) {
             disabled={isDisabled}
             aria-label={item.label}
           >
-            {/* Indicateur actif */}
             {isActive && (
-              <span className="absolute top-0 left-[10%] w-[80%] h-[3px] bg-secondary rounded-b-[4px] shadow-[0_1px_0_#000]" />
+              <span className="absolute top-0 left-[10%] w-[80%] h-[3px] bg-secondary rounded-b shadow-[0_1px_0_#000]" />
             )}
             <span className="text-[22px] leading-none">{item.icon}</span>
             <span>{item.label}</span>
