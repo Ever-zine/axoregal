@@ -2,7 +2,7 @@ import './LoadingPage.scss'
 
 export function LoadingPage() {
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-bg gap-8">
+    <div className="relative flex flex-col items-center justify-center h-full bg-bg gap-8 overflow-hidden">
       <span className="text-cuphead-lg text-5xl text-secondary">Axoregal</span>
 
       {/* Personnage dansant */}
@@ -27,6 +27,9 @@ export function LoadingPage() {
           />
         ))}
       </div>
+      <p className="absolute top-[15%] right-[-30%] w-[120%] rotate-45 text-xs font-display tracking-widest uppercase bg-primary text-text text-center py-1.5 shadow-cup-btn border-y-[2px] border-black">
+        Made by Anthropix × OpenAI × AAAAT
+      </p>
     </div>
   )
 }
