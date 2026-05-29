@@ -11,11 +11,11 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
-  { id: 'swipe',  label: 'Swipe', icon: '♨', path: '/swipe' },
-  { id: 'create', label: 'Créer', icon: '✚', path: '/create-group', disabledIfGroup: true },
-  { id: 'chat',   label: 'Chat',  icon: '♨', path: '/chat', requiresGroup: true },
-  { id: 'search', label: 'Resto', icon: '✦', path: '/search' },
-  { id: 'history', label: 'Hist.', icon: '◷', path: '/history' },
+  { id: 'search',  label: 'Resto',  icon: '✦', path: '/search' },
+  { id: 'create',  label: 'Créer',  icon: '✚', path: '/create-group', disabledIfGroup: true },
+  { id: 'swipe',   label: 'Swipe',  icon: '♨', path: '/swipe' },
+  { id: 'chat',    label: 'Chat',   icon: '♨', path: '/chat', requiresGroup: true },
+  { id: 'history', label: 'Hist.',  icon: '◷', path: '/history' },
 ]
 
 export function BottomNav() {
@@ -35,6 +35,7 @@ export function BottomNav() {
             className={[
               'relative flex flex-1 flex-col items-center justify-center gap-[3px]',
               'text-[10px] font-bold',
+              item.id === 'swipe' ? 'bottom-nav-swipe-center' : '',
               isActive ? 'text-primary' : 'text-text',
               isDisabled ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer',
             ].join(' ')}
@@ -42,10 +43,10 @@ export function BottomNav() {
             disabled={isDisabled}
             aria-label={item.label}
           >
-            {isActive && (
+            {isActive && item.id !== 'swipe' && (
               <span className="absolute left-1/2 top-2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary" />
             )}
-            <span className="bottom-nav-icon leading-none text-primary">{item.icon}</span>
+            <span className={['leading-none', item.id === 'swipe' ? 'bottom-nav-swipe-icon' : 'bottom-nav-icon text-primary'].join(' ')}>{item.icon}</span>
             <span>{item.label}</span>
           </button>
         )

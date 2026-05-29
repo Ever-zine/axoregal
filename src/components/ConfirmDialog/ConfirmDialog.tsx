@@ -43,7 +43,7 @@ export function ConfirmDialog({
           >
             <p className="text-center text-base font-bold leading-snug text-text">{message}</p>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 px-2 pb-2">
               <button
                 className="figma-button w-full bg-primary text-sm font-bold text-white"
                 onClick={onConfirm}

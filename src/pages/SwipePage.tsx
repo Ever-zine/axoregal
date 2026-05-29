@@ -55,12 +55,12 @@ export function SwipePage() {
 
           {menuOpen && (
             <div className="swipe-menu-popover border-cup bg-surface shadow-cup-card">
-              <div className="px-4 py-3 border-b-[2px] border-black">
+              <div className="px-6 py-5 border-b-[2px] border-black">
                 <p className="font-display text-sm text-text truncate">{user?.name}</p>
                 <p className="text-xs text-muted truncate">{user?.email}</p>
               </div>
               <button
-                className="w-full px-4 py-3 text-left font-semibold text-sm text-accent hover:bg-[rgba(255,23,68,0.08)] transition-colors"
+                className="w-full px-6 py-5 text-left font-semibold text-sm text-accent hover:bg-[rgba(255,23,68,0.08)] transition-colors"
                 onClick={handleLogout}
               >
                 Déconnexion
