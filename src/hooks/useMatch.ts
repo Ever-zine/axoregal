@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { getMyTodayGroup, fetchGroupWithMembers, type MatchGroup } from '@/services/matching'
+import { getMyTodayGroup, fetchGroupWithMembers, leaveGroup as leaveGroupMembership, type MatchGroup } from '@/services/matching'
 import { useAuth } from '@/providers/AuthProvider'
 
 interface UseMatchResult {
   group: MatchGroup | null
   isLoading: boolean
   clearGroup: () => void
+  leaveGroup: () => Promise<void>
 }
 
 export function useMatch(): UseMatchResult {
@@ -39,12 +40,27 @@ export function useMatch(): UseMatchResult {
           setGroup(matched)
         },
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'group_members',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => setGroup(null),
+      )
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
   }, [user])
 
   const clearGroup = useCallback(() => setGroup(null), [])
+  const leaveGroup = useCallback(async () => {
+    if (!user || !group) return
+    await leaveGroupMembership(user.id, group.id)
+    setGroup(null)
+  }, [group, user])
 
-  return { group, isLoading, clearGroup }
+  return { group, isLoading, clearGroup, leaveGroup }
 }

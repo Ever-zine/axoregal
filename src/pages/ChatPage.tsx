@@ -9,9 +9,10 @@ import type { ChatMessage } from '@/services/chat'
 import './ChatPage.scss'
 
 export function ChatPage() {
-  const { group } = useGroup()
+  const { group, leaveGroup } = useGroup()
   const { messages, isLoading, isSending, send, currentUserId } = useChat(group?.id)
   const [input, setInput] = useState('')
+  const [isLeaving, setIsLeaving] = useState(false)
   const messagesRef = useScrollToBottom(messages.length)
 
   // CHAT-01 : redirige si pas de groupe
@@ -33,15 +34,27 @@ export function ChatPage() {
     }
   }
 
+  async function handleLeaveGroup() {
+    if (!window.confirm('Quitter ce groupe ? Tu ne verras plus son chat.')) return
+    setIsLeaving(true)
+    try {
+      await leaveGroup()
+    } finally {
+      setIsLeaving(false)
+    }
+  }
+
   return (
     <PageTransition>
-    <div className="flex flex-col h-full bg-bg overflow-hidden">
+    <div className="figma-screen chat-screen">
+    <div className="figma-screen-bg" />
+    <div className="figma-page chat-page">
       {/* Header */}
-      <header className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b-[2px] border-black bg-surface">
-        <span className="text-3xl">{category.emoji}</span>
-        <div className="flex-1 min-w-0">
-          <span className="text-cuphead text-base text-secondary block truncate">{group.name}</span>
-          <span className="text-xs text-muted">
+      <header className="chat-header border-cup bg-surface">
+        <span className="chat-header-emoji">{category.emoji}</span>
+        <div className="chat-header-copy">
+          <span className="figma-title chat-title">{group.name}</span>
+          <span className="chat-subtitle">
             {category.emoji} {category.name} · {group.members.length} membre{group.members.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -53,13 +66,13 @@ export function ChatPage() {
                 key={m.id}
                 src={m.avatar_url}
                 alt={m.name}
-                className="w-7 h-7 rounded-full border-[2px] border-black object-cover"
+                className="chat-member-avatar rounded-full border-[2px] border-black object-cover"
                 style={{ marginLeft: i === 0 ? 0 : -6 }}
               />
             ) : (
               <div
                 key={m.id}
-                className="w-7 h-7 rounded-full border-[2px] border-black bg-primary flex items-center justify-center text-[10px] font-display text-text"
+                className="chat-member-avatar flex items-center justify-center rounded-full border-[2px] border-black bg-primary font-display text-[10px] text-text"
                 style={{ marginLeft: i === 0 ? 0 : -6 }}
               >
                 {m.name.charAt(0)}
@@ -67,12 +80,19 @@ export function ChatPage() {
             ),
           )}
         </div>
+        <button
+          className="chat-leave-button"
+          onClick={handleLeaveGroup}
+          disabled={isLeaving}
+        >
+          {isLeaving ? '...' : 'Quitter'}
+        </button>
       </header>
 
       {/* Liste des messages */}
       <div
         ref={messagesRef}
-        className="messages flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-3"
+        className="messages figma-main chat-messages"
       >
         {isLoading && (
           <p className="text-center text-muted text-sm py-8">Chargement…</p>
@@ -81,7 +101,7 @@ export function ChatPage() {
         {!isLoading && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center flex-1 gap-3 text-center px-6">
             <span className="text-5xl">{category.emoji}</span>
-            <p className="text-cuphead text-sm text-muted uppercase">Soyez les premiers à parler !</p>
+            <p className="figma-title chat-empty-title text-muted">Soyez les premiers à parler !</p>
           </div>
         )}
 
@@ -91,7 +111,7 @@ export function ChatPage() {
       </div>
 
       {/* Barre d'envoi */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-3 py-3 border-t-[2px] border-black bg-surface">
+      <div className="chat-composer border-cup bg-surface">
         <input
           type="text"
           value={input}
@@ -99,13 +119,12 @@ export function ChatPage() {
           onKeyDown={handleKeyDown}
           placeholder="Ton message…"
           maxLength={1000}
-          className="flex-1 bg-bg border-cup rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-primary"
+          className="chat-input border-cup bg-bg text-text placeholder:text-muted focus:border-primary focus:outline-none"
         />
         <button
           className={[
-            'w-12 h-12 rounded-xl border-cup flex items-center justify-center text-xl flex-shrink-0',
-            'shadow-cup-btn btn-press transition-opacity',
-            canSend ? 'bg-primary text-text' : 'bg-surface text-muted opacity-40 cursor-not-allowed',
+            'figma-button chat-send-button',
+            canSend ? 'bg-primary text-surface' : 'bg-surface text-muted opacity-40 cursor-not-allowed',
           ].join(' ')}
           onClick={handleSend}
           disabled={!canSend}
@@ -116,6 +135,7 @@ export function ChatPage() {
       </div>
 
       <BottomNav />
+    </div>
     </div>
     </PageTransition>
   )
@@ -130,8 +150,8 @@ function MessageBubble({ msg, isOwn }: { msg: ChatMessage; isOwn: boolean }) {
     return (
       <div className="message flex items-end justify-end gap-2">
         <span className="text-[10px] text-muted self-end mb-1">{time}</span>
-        <div className="max-w-[75%] bg-primary border-cup rounded-2xl rounded-br-none px-4 py-2 shadow-cup-btn">
-          <p className="text-sm text-text leading-relaxed break-words">{msg.content}</p>
+        <div className="max-w-[82%] rounded-2xl rounded-br-none border-cup bg-primary px-4 py-2 shadow-cup-btn">
+          <p className="break-words text-sm leading-relaxed text-surface">{msg.content}</p>
         </div>
       </div>
     )
@@ -147,9 +167,9 @@ function MessageBubble({ msg, isOwn }: { msg: ChatMessage; isOwn: boolean }) {
           {name.charAt(0)}
         </div>
       )}
-      <div className="max-w-[75%] flex flex-col gap-1">
+      <div className="flex max-w-[82%] flex-col gap-1">
         <span className="text-[10px] text-muted font-bold px-1">{name}</span>
-        <div className="bg-surface border-cup rounded-2xl rounded-tl-none px-4 py-2 shadow-cup-btn">
+        <div className="rounded-2xl rounded-tl-none border-cup bg-surface px-4 py-2 shadow-cup-btn">
           <p className="text-sm text-text leading-relaxed break-words">{msg.content}</p>
         </div>
         <span className="text-[10px] text-muted px-1">{time}</span>

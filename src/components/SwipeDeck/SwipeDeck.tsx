@@ -9,12 +9,23 @@ import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
 
 export function SwipeDeck() {
   const { user } = useAuth()
-  const { group: myGroup } = useGroup()
+  const { group: myGroup, leaveGroup } = useGroup()
   const { data: availableGroups = [], isLoading } = useAvailableGroups()
   const [localSwiped, setLocalSwiped] = useState<string[]>([])
+  const [isLeaving, setIsLeaving] = useState(false)
   const { mutate: recordSwipe } = useRecordSwipe()
   const { mutate: joinGroup } = useJoinGroup()
   const navigate = useNavigate()
+
+  async function handleLeaveGroup() {
+    if (!window.confirm('Quitter ce groupe ?')) return
+    setIsLeaving(true)
+    try {
+      await leaveGroup()
+    } finally {
+      setIsLeaving(false)
+    }
+  }
 
   if (myGroup) {
     return (
@@ -27,6 +38,13 @@ export function SwipeDeck() {
           onClick={() => navigate('/chat')}
         >
           Aller au chat
+        </button>
+        <button
+          className="text-sm font-bold text-muted underline"
+          onClick={handleLeaveGroup}
+          disabled={isLeaving}
+        >
+          {isLeaving ? 'Départ...' : 'Quitter le groupe'}
         </button>
       </div>
     )

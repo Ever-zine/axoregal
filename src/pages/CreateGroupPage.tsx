@@ -31,23 +31,24 @@ export function CreateGroupPage() {
 
   return (
     <PageTransition>
-    <div className="flex flex-col h-full bg-bg overflow-hidden">
-      <header className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b-[2px] border-black">
+    <div className="figma-screen create-group-screen">
+    <div className="figma-screen-bg" />
+    <div className="figma-page create-group-page">
+      <header className="create-group-header">
         <button
-          className="text-muted font-semibold text-sm"
+          className="create-group-back"
           onClick={() => navigate('/swipe')}
           aria-label="Retour"
         >
           ← Retour
         </button>
-        <span className="text-cuphead-lg text-xl text-secondary">Créer un groupe</span>
-        <div className="w-16" />
+        <span className="figma-brand create-group-title">Créer un groupe</span>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-6">
+      <div className="create-group-content figma-scroll">
         {/* Nom du groupe */}
-        <div className="flex flex-col gap-2">
-          <label className="font-display text-sm text-text uppercase tracking-wider">
+        <div className="create-group-field">
+          <label className="create-group-label">
             Nom du groupe
           </label>
           <input
@@ -56,21 +57,21 @@ export function CreateGroupPage() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex : Lunch équipe produit"
             maxLength={60}
-            className="bg-surface border-cup rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-primary"
+            className="create-group-input border-cup bg-surface text-text placeholder:text-muted focus:border-primary focus:outline-none"
           />
         </div>
 
         {/* Catégorie */}
-        <div className="flex flex-col gap-3">
-          <label className="font-display text-sm text-text uppercase tracking-wider">
+        <div className="create-group-field">
+          <label className="create-group-label">
             Type de cuisine
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="create-group-grid">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 className={[
-                  'flex items-center gap-3 px-4 py-3 rounded-xl border-cup font-semibold text-sm text-left transition-all btn-press',
+                  'create-category-option border-cup btn-press',
                   selectedCategory === cat.id
                     ? 'bg-primary shadow-cup-card'
                     : 'bg-surface shadow-cup-btn text-muted',
@@ -90,10 +91,10 @@ export function CreateGroupPage() {
         )}
       </div>
 
-      <div className="flex-shrink-0 px-5 pb-3">
+      <div className="create-group-footer">
         <button
           className={[
-            'w-full bg-success text-text font-display text-xl py-4 border-cup-xl rounded-2xl shadow-cup-card uppercase tracking-wider transition-opacity',
+            'figma-button create-group-submit bg-success text-text',
             canCreate ? 'btn-press' : 'opacity-40 cursor-not-allowed',
           ].join(' ')}
           onClick={handleCreate}
@@ -104,6 +105,7 @@ export function CreateGroupPage() {
       </div>
 
       <BottomNav />
+    </div>
     </div>
     </PageTransition>
   )

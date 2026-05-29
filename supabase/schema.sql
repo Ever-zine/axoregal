@@ -73,6 +73,9 @@ CREATE POLICY "Membres visibles par tous les connectés"
 CREATE POLICY "Utilisateur rejoint un groupe"
   ON public.group_members FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Utilisateur quitte son groupe"
+  ON public.group_members FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
 
 ALTER PUBLICATION supabase_realtime ADD TABLE public.group_members;
 

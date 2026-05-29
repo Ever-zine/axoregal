@@ -6,15 +6,16 @@ interface GroupContextValue {
   group: MatchGroup | null
   isLoadingGroup: boolean
   clearGroup: () => void
+  leaveGroup: () => Promise<void>
 }
 
 const GroupContext = createContext<GroupContextValue | null>(null)
 
 export function GroupProvider({ children }: { children: ReactNode }) {
-  const { group, isLoading, clearGroup } = useMatch()
+  const { group, isLoading, clearGroup, leaveGroup } = useMatch()
 
   return (
-    <GroupContext.Provider value={{ group, isLoadingGroup: isLoading, clearGroup }}>
+    <GroupContext.Provider value={{ group, isLoadingGroup: isLoading, clearGroup, leaveGroup }}>
       {children}
     </GroupContext.Provider>
   )
