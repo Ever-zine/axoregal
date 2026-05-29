@@ -5,6 +5,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { SplashPage } from '@/pages/SplashPage'
 import { AuthCallbackPage } from '@/pages/AuthCallbackPage'
 import { SwipePage } from '@/pages/SwipePage'
+import { MatchPage } from '@/pages/MatchPage'
+import { SurprisePage } from '@/pages/SurprisePage'
 
 export function App() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -18,30 +20,16 @@ export function App() {
         path="/login"
         element={isAuthenticated ? <Navigate to="/splash" replace /> : <LoginPage />}
       />
-      <Route
-        path="/splash"
-        element={
-          <ProtectedRoute>
-            <SplashPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/swipe"
-        element={
-          <ProtectedRoute>
-            <SwipePage />
-          </ProtectedRoute>
-        }
-      />
-      {/* Première visite après connexion → splash */}
+      <Route path="/splash"    element={<ProtectedRoute><SplashPage /></ProtectedRoute>} />
+      <Route path="/swipe"     element={<ProtectedRoute><SwipePage /></ProtectedRoute>} />
+      <Route path="/match/:groupId" element={<ProtectedRoute><MatchPage /></ProtectedRoute>} />
+      <Route path="/surprise"  element={<ProtectedRoute><SurprisePage /></ProtectedRoute>} />
+      {/* Chat et Search — placeholders Epic 4 & 5 */}
+      <Route path="/chat"      element={<ProtectedRoute><SwipePage /></ProtectedRoute>} />
+      <Route path="/search"    element={<ProtectedRoute><SwipePage /></ProtectedRoute>} />
       <Route
         path="/"
-        element={
-          isAuthenticated
-            ? <Navigate to="/splash" replace />
-            : <Navigate to="/login" replace />
-        }
+        element={isAuthenticated ? <Navigate to="/splash" replace /> : <Navigate to="/login" replace />}
       />
     </Routes>
   )

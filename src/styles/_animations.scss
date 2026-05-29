@@ -46,3 +46,22 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+// Match page — étoile qui part depuis le centre vers --tx/--ty
+@keyframes sparkle {
+  0%   { transform: translate(0, 0) scale(1.2) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg); opacity: 0; }
+}
+
+@keyframes matchTitle {
+  0%   { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  80%  { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes avatarPop {
+  0%   { transform: translateY(30px) scale(0.8); opacity: 0; }
+  70%  { transform: translateY(-6px) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}

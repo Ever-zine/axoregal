@@ -1,0 +1,14 @@
+// SCSS requis : l'animation sparkle utilise --tx/--ty injectées en inline style
+// depuis le composant React (positions aléatoires calculées en JS).
+// Tailwind ne peut pas exprimer des keyframes qui lisent des custom properties
+// définies à l'exécution.
+
+.star {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 1.75rem;
+  line-height: 1;
+  pointer-events: none;
+  animation: sparkle 0.9s steps(6, end) forwards;
+}
