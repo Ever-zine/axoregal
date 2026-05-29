@@ -21,18 +21,23 @@ interface UseContestResult {
   phase: ContestPhase
   myScore: number
   opponentScore: number
+  micVolume: number          // volume instantané 0-100 pour la visualisation
   countdownSeconds: number
   winner: string | null
   pendingChallenge: PendingChallenge | null
   activeContest: Contest | null
+  micError: string | null    // message d'erreur si l'accès micro est refusé
   challenge: () => Promise<void>
   accept: () => Promise<void>
   decline: () => Promise<void>
-  tap: () => void
 }
 
 const CONTEST_DURATION_MS = 5000
 const COUNTDOWN_MS = 3000
+// Fréquence d'échantillonnage du volume (ms)
+const SAMPLE_INTERVAL_MS = 100
+// Fréquence de broadcast du score (ms)
+const BROADCAST_INTERVAL_MS = 200
 
 export function useContest(
   groupId: string | undefined,
@@ -43,47 +48,138 @@ export function useContest(
   const [phase, setPhase] = useState<ContestPhase>('idle')
   const [myScore, setMyScore] = useState(0)
   const [opponentScore, setOpponentScore] = useState(0)
+  const [micVolume, setMicVolume] = useState(0)
   const [countdownSeconds, setCountdownSeconds] = useState(3)
   const [winner, setWinner] = useState<string | null>(null)
   const [pendingChallenge, setPendingChallenge] = useState<PendingChallenge | null>(null)
   const [activeContest, setActiveContest] = useState<Contest | null>(null)
+  const [micError, setMicError] = useState<string | null>(null)
 
-  // Refs pour éviter les stale closures dans les timers
   const phaseRef = useRef<ContestPhase>('idle')
   const myScoreRef = useRef(0)
   const opponentScoreRef = useRef(0)
-  const startAtRef = useRef<number | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const isChallenger = useRef(false)
+  const hasFinished = useRef(false)
+  const activeContestRef = useRef<Contest | null>(null)
+
+  // Refs audio
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const micLoopRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const broadcastLoopRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastBroadcastRef = useRef(0)
 
   const updatePhase = (p: ContestPhase) => {
     phaseRef.current = p
     setPhase(p)
   }
 
+  useEffect(() => {
+    activeContestRef.current = activeContest
+  }, [activeContest])
+
+  const stopMic = useCallback(() => {
+    if (micLoopRef.current) clearInterval(micLoopRef.current)
+    if (broadcastLoopRef.current) clearInterval(broadcastLoopRef.current)
+    micLoopRef.current = null
+    broadcastLoopRef.current = null
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current = null
+    audioCtxRef.current?.close()
+    audioCtxRef.current = null
+    analyserRef.current = null
+    setMicVolume(0)
+  }, [])
+
+  const handleFinished = useCallback((winnerId: string | null) => {
+    if (hasFinished.current) return
+    hasFinished.current = true
+    if (timerRef.current) clearInterval(timerRef.current)
+    stopMic()
+    setWinner(winnerId)
+    updatePhase('finished')
+    setTimeout(() => {
+      resetState()
+      onContestFinished()
+    }, 4000)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onContestFinished, stopMic])
+
   const resetState = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
     timerRef.current = null
-    startAtRef.current = null
     myScoreRef.current = 0
     opponentScoreRef.current = 0
     isChallenger.current = false
+    hasFinished.current = false
     setMyScore(0)
     setOpponentScore(0)
+    setMicVolume(0)
     setCountdownSeconds(3)
     setWinner(null)
     setPendingChallenge(null)
     setActiveContest(null)
+    setMicError(null)
     updatePhase('idle')
   }, [])
 
-  // Lance le countdown puis le combat
+  // Démarre la capture micro et la boucle d'accumulation du score
+  const startMic = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      streamRef.current = stream
+
+      const ctx = new AudioContext()
+      audioCtxRef.current = ctx
+      const source = ctx.createMediaStreamSource(stream)
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 256
+      source.connect(analyser)
+      analyserRef.current = analyser
+
+      const dataArray = new Uint8Array(analyser.fftSize)
+
+      micLoopRef.current = setInterval(() => {
+        if (!analyserRef.current) return
+        analyserRef.current.getByteTimeDomainData(dataArray)
+
+        // RMS → volume 0-100
+        const rms = Math.sqrt(
+          dataArray.reduce((sum, v) => sum + (v - 128) ** 2, 0) / dataArray.length,
+        )
+        const vol = Math.min(Math.round((rms / 50) * 100), 100)
+        setMicVolume(vol)
+
+        // Accumule dans le score (sommation des volumes)
+        myScoreRef.current += vol
+        setMyScore(myScoreRef.current)
+
+        // Broadcast le score à intervalles réguliers
+        const now = Date.now()
+        if (now - lastBroadcastRef.current >= BROADCAST_INTERVAL_MS) {
+          lastBroadcastRef.current = now
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'tap',
+            payload: { userId: user!.id, count: myScoreRef.current },
+          })
+        }
+      }, SAMPLE_INTERVAL_MS)
+
+      setMicError(null)
+    } catch {
+      setMicError("Accès au micro refusé — autorise le micro dans les paramètres de ton navigateur.")
+      stopMic()
+    }
+  }, [user, stopMic])
+
   const startCountdown = useCallback((startAt: number) => {
-    startAtRef.current = startAt
     updatePhase('countdown')
 
-    timerRef.current = setInterval(() => {
+    timerRef.current = setInterval(async () => {
       const now = Date.now()
       const remaining = Math.ceil((startAt - now) / 1000)
 
@@ -93,13 +189,17 @@ export function useContest(
         if (timerRef.current) clearInterval(timerRef.current)
         updatePhase('running')
 
+        // Démarre le micro dès que le combat commence
+        await startMic()
+
         // Timer de fin de combat
         timerRef.current = setInterval(async () => {
           const elapsed = Date.now() - startAt
-          if (elapsed >= CONTEST_DURATION_MS) {
+          if (elapsed >= CONTEST_DURATION_MS + COUNTDOWN_MS) {
             if (timerRef.current) clearInterval(timerRef.current)
+            stopMic()
 
-            // Seul le challenger appelle le RPC
+            // Seul le challenger finalise — le postgres_changes notifie les deux
             if (isChallenger.current && activeContestRef.current) {
               try {
                 await finishContest(
@@ -108,29 +208,22 @@ export function useContest(
                   opponentScoreRef.current,
                 )
               } catch {
-                // Le chef a peut-être déjà finalisé — ignorer
+                // Ignorer si déjà finalisé
               }
             }
           }
         }, 100)
       }
     }, 200)
-  }, [])
+  }, [startMic, stopMic])
 
-  // Ref vers activeContest pour les closures des timers
-  const activeContestRef = useRef<Contest | null>(null)
-  useEffect(() => {
-    activeContestRef.current = activeContest
-  }, [activeContest])
-
-  // Canal Realtime pour le contest
+  // Canal Realtime pour les événements broadcast du contest
   useEffect(() => {
     if (!groupId || !user) return
 
     const channel = supabase
       .channel(`contest:${groupId}`)
       .on('broadcast', { event: 'challenge' }, ({ payload }) => {
-        // Le chef reçoit le défi
         if (user.id === chefId) {
           setPendingChallenge({
             contestId: payload.contestId,
@@ -141,35 +234,48 @@ export function useContest(
         }
       })
       .on('broadcast', { event: 'accepted' }, ({ payload }) => {
-        // Les deux joueurs démarrent le countdown
         startCountdown(payload.startAt)
       })
       .on('broadcast', { event: 'declined' }, () => {
         resetState()
       })
       .on('broadcast', { event: 'tap' }, ({ payload }) => {
-        // Score de l'adversaire
         if (payload.userId !== user.id) {
           opponentScoreRef.current = payload.count
           setOpponentScore(payload.count)
         }
       })
-      .on('broadcast', { event: 'finished' }, ({ payload }) => {
-        if (timerRef.current) clearInterval(timerRef.current)
-        setWinner(payload.winner)
-        updatePhase('finished')
-        setTimeout(() => {
-          resetState()
-          onContestFinished()
-        }, 4000)
-      })
       .subscribe()
 
     channelRef.current = channel
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [groupId, user, chefId, startCountdown, resetState, onContestFinished])
+    return () => { supabase.removeChannel(channel) }
+  }, [groupId, user, chefId, startCountdown, resetState])
+
+  // postgres_changes sur contests — signal de fin pour les deux joueurs
+  useEffect(() => {
+    if (!groupId || !user) return
+
+    const sub = supabase
+      .channel(`contest-db:${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'contests',
+          filter: `group_id=eq.${groupId}`,
+        },
+        (payload) => {
+          const updated = payload.new as { status: string; winner: string | null; id: string }
+          if (updated.status === 'finished') {
+            handleFinished(updated.winner)
+          }
+        },
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(sub) }
+  }, [groupId, user, handleFinished])
 
   const challenge = useCallback(async () => {
     if (!groupId || !user || !chefId || phase !== 'idle') return
@@ -190,23 +296,23 @@ export function useContest(
   }, [groupId, user, chefId, phase])
 
   const accept = useCallback(async () => {
-    if (!pendingChallenge) return
+    if (!pendingChallenge || !groupId || !user) return
     await acceptContest(pendingChallenge.contestId)
     const startAt = Date.now() + COUNTDOWN_MS
 
-    // Charge le contest pour le chef
-    setActiveContest({
+    const syntheticContest: Contest = {
       id: pendingChallenge.contestId,
-      group_id: groupId!,
+      group_id: groupId,
       challenger: pendingChallenge.challengerId,
-      chef: user!.id,
+      chef: user.id,
       status: 'accepted',
       challenger_score: null,
       chef_score: null,
       winner: null,
       created_at: new Date().toISOString(),
       finished_at: null,
-    })
+    }
+    setActiveContest(syntheticContest)
     setPendingChallenge(null)
 
     channelRef.current?.send({
@@ -231,78 +337,21 @@ export function useContest(
     resetState()
   }, [pendingChallenge, resetState])
 
-  const tap = useCallback(() => {
-    if (phaseRef.current !== 'running') return
-    const newScore = myScoreRef.current + 1
-    myScoreRef.current = newScore
-    setMyScore(newScore)
-
-    channelRef.current?.send({
-      type: 'broadcast',
-      event: 'tap',
-      payload: { userId: user!.id, count: newScore },
-    })
-  }, [user])
-
-  // Quand le contest est finished, broadcaster le résultat (côté challenger uniquement)
-  // C'est géré dans le timer setInterval ci-dessus après finishContest()
-  // Le hook postgres_changes sur la table contests détectera le changement
-  // et notifiera l'autre joueur via le broadcast 'finished'
-  useEffect(() => {
-    if (!groupId || !user) return
-
-    const sub = supabase
-      .channel(`contest-db:${groupId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'contests',
-          filter: `group_id=eq.${groupId}`,
-        },
-        (payload) => {
-          const updated = payload.new as { status: string; winner: string | null; challenger_score: number | null; chef_score: number | null; id: string }
-          if (updated.status === 'finished') {
-            if (timerRef.current) clearInterval(timerRef.current)
-            setWinner(updated.winner)
-            updatePhase('finished')
-
-            // Broadcaster pour notifier l'autre joueur si le RPC vient de l'adversaire
-            channelRef.current?.send({
-              type: 'broadcast',
-              event: 'finished',
-              payload: {
-                contestId: updated.id,
-                winner: updated.winner,
-                challengerScore: updated.challenger_score,
-                chefScore: updated.chef_score,
-              },
-            })
-
-            setTimeout(() => {
-              resetState()
-              onContestFinished()
-            }, 4000)
-          }
-        },
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(sub) }
-  }, [groupId, user, resetState, onContestFinished])
+  // Nettoyage à la destruction
+  useEffect(() => () => { stopMic() }, [stopMic])
 
   return {
     phase,
     myScore,
     opponentScore,
+    micVolume,
     countdownSeconds,
     winner,
     pendingChallenge,
     activeContest,
+    micError,
     challenge,
     accept,
     decline,
-    tap,
   }
 }

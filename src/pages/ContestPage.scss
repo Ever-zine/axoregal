@@ -8,7 +8,6 @@
   background: var(--color-bg);
   max-width: min(100%, 430px);
   margin: 0 auto;
-  padding: 0;
   overflow: hidden;
 }
 
@@ -19,6 +18,7 @@
   align-items: center;
   justify-content: center;
   border-bottom: 3px solid #000;
+  flex-shrink: 0;
 }
 
 .contest-header-title {
@@ -35,8 +35,9 @@
   flex-direction: column;
   justify-content: center;
   gap: 10px;
-  padding: 16px 20px;
+  padding: 14px 20px;
   transition: background 0.3s;
+  min-height: 0;
 }
 
 .contest-opponent {
@@ -76,7 +77,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .contest-avatar-placeholder {
@@ -99,10 +100,11 @@
 
 .contest-score {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 16px;
   color: var(--color-text);
-  min-width: 64px;
+  min-width: 56px;
   text-align: right;
+  white-space: nowrap;
 }
 
 .contest-bar-track {
@@ -120,26 +122,30 @@
   border-radius: 2px;
 }
 
+// Zone centrale (countdown / micro / résultat)
 .contest-center {
-  height: 72px;
+  height: 120px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: var(--color-surface);
   border-top: 3px solid #000;
   border-bottom: 3px solid #000;
+  flex-shrink: 0;
 }
 
 .contest-countdown {
   font-family: var(--font-display);
-  font-size: 48px;
+  font-size: 56px;
   color: var(--color-accent);
   line-height: 1;
 }
 
 .contest-running-label {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 22px;
   color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -148,27 +154,101 @@
 
 .contest-result {
   font-family: var(--font-display);
-  font-size: clamp(22px, 6vw, 32px);
+  font-size: clamp(24px, 7vw, 36px);
   color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.contest-tap-button {
-  margin: 12px 16px;
-  margin-bottom: max(12px, env(safe-area-inset-bottom));
-  padding: 18px;
+.contest-waiting {
   font-family: var(--font-display);
-  font-size: clamp(16px, 4vw, 22px);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  border: 3px solid #000;
-  border-radius: 12px;
-  box-shadow: var(--shadow-btn);
-  transition: box-shadow 0.05s, transform 0.05s;
+  font-size: 20px;
+  color: var(--color-muted);
 }
 
-/* star (sparkle) — identique à MatchPage */
+// Visualiseur micro
+.contest-mic-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.contest-mic-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+}
+
+.contest-mic-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0.3;
+}
+
+.contest-mic-icon {
+  font-size: 32px;
+  position: relative;
+  z-index: 1;
+  line-height: 1;
+  filter: grayscale(0.5);
+  transition: filter 0.2s;
+
+  &.contest-mic-active {
+    filter: grayscale(0);
+  }
+}
+
+.contest-mic-volume {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 10px;
+  font-family: var(--font-display);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border-radius: 8px;
+  padding: 1px 4px;
+  z-index: 2;
+}
+
+.contest-mic-error {
+  font-size: 11px;
+  color: var(--color-accent);
+  text-align: center;
+  max-width: 240px;
+  font-weight: 600;
+}
+
+// Footer
+.contest-footer {
+  padding: 10px 20px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contest-footer-hint {
+  font-size: 13px;
+  color: var(--color-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+.contest-footer-error {
+  color: var(--color-accent);
+  font-style: normal;
+  font-weight: 600;
+}
+
+// star (sparkle) — identique à MatchPage
 .star {
   position: absolute;
   font-size: clamp(18px, 4vw, 26px);

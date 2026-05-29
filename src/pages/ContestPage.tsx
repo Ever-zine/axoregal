@@ -45,13 +45,13 @@ function Avatar({ member, size = 64 }: { member: GroupMember | null; size?: numb
   )
 }
 
-function ScoreBar({ score, maxScore, reversed }: { score: number; maxScore: number; reversed?: boolean }) {
+function ScoreBar({ score, maxScore }: { score: number; maxScore: number }) {
   const ratio = maxScore > 0 ? Math.min(score / maxScore, 1) : 0
   return (
     <div className="contest-bar-track">
       <motion.div
         className="contest-bar-fill"
-        style={{ transformOrigin: reversed ? 'right' : 'left' }}
+        style={{ transformOrigin: 'left' }}
         animate={{ scaleX: ratio }}
         initial={{ scaleX: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 30 }}
@@ -60,35 +60,58 @@ function ScoreBar({ score, maxScore, reversed }: { score: number; maxScore: numb
   )
 }
 
+// Visualiseur de volume micro — cercle pulsant
+function MicVisualizer({ volume, active }: { volume: number; active: boolean }) {
+  const scale = active ? 1 + (volume / 100) * 0.6 : 1
+  const opacity = active ? 0.4 + (volume / 100) * 0.6 : 0.3
+
+  return (
+    <div className="contest-mic-wrapper">
+      <motion.div
+        className="contest-mic-ring"
+        animate={{ scale, opacity }}
+        transition={{ type: 'spring', stiffness: 300, damping: 10 }}
+      />
+      <div className={['contest-mic-icon', active ? 'contest-mic-active' : ''].join(' ')}>
+        🎙️
+      </div>
+      {active && (
+        <span className="contest-mic-volume">{volume}%</span>
+      )}
+    </div>
+  )
+}
+
 interface ContestPageProps {
   phase: ContestPhase
   myScore: number
   opponentScore: number
+  micVolume: number
   countdownSeconds: number
   winner: string | null
   myUserId: string
   me: GroupMember | null
   opponent: GroupMember | null
-  isChallenger: boolean
-  onTap: () => void
+  micError: string | null
 }
 
 export function ContestPage({
   phase,
   myScore,
   opponentScore,
+  micVolume,
   countdownSeconds,
   winner,
   myUserId,
   me,
   opponent,
-  onTap,
+  micError,
 }: ContestPageProps) {
   const isFinished = phase === 'finished'
   const isRunning = phase === 'running'
   const isCountdown = phase === 'countdown'
   const iWon = isFinished && winner === myUserId
-  const maxScore = Math.max(myScore, opponentScore, 10)
+  const maxScore = Math.max(myScore, opponentScore, 1)
 
   return (
     <motion.div
@@ -111,16 +134,16 @@ export function ContestPage({
       </div>
 
       {/* Zone adversaire */}
-      <div className={['contest-player contest-opponent', isFinished && winner !== myUserId ? 'contest-winner-side' : isFinished ? 'contest-loser-side' : ''].join(' ')}>
+      <div className={['contest-player contest-opponent', isFinished && !iWon ? 'contest-winner-side' : isFinished ? 'contest-loser-side' : ''].join(' ')}>
         <div className="contest-player-info">
-          <Avatar member={opponent} size={56} />
+          <Avatar member={opponent} size={52} />
           <span className="contest-player-name">{opponent?.name ?? '…'}</span>
-          <span className="contest-score">🐺 x{opponentScore}</span>
+          <span className="contest-score">🐺 {opponentScore}</span>
         </div>
-        <ScoreBar score={opponentScore} maxScore={maxScore} reversed />
+        <ScoreBar score={opponentScore} maxScore={maxScore} />
       </div>
 
-      {/* Countdown / Timer central */}
+      {/* Zone centrale — countdown ou visualiseur micro */}
       <div className="contest-center">
         {isCountdown && (
           <motion.span
@@ -134,7 +157,14 @@ export function ContestPage({
           </motion.span>
         )}
         {isRunning && (
-          <span className="contest-running-label">ABOIE !</span>
+          <div className="contest-mic-center">
+            <MicVisualizer volume={micVolume} active={!micError} />
+            {micError ? (
+              <p className="contest-mic-error">{micError}</p>
+            ) : (
+              <span className="contest-running-label">ABOIE !</span>
+            )}
+          </div>
         )}
         {isFinished && (
           <motion.div
@@ -146,28 +176,36 @@ export function ContestPage({
             {iWon ? '👑 ALPHA !' : '😤 DÉFAITE'}
           </motion.div>
         )}
+        {!isCountdown && !isRunning && !isFinished && (
+          <span className="contest-waiting">Prêt…</span>
+        )}
       </div>
 
       {/* Zone joueur */}
-      <div className={['contest-player contest-me', isFinished && winner === myUserId ? 'contest-winner-side' : isFinished ? 'contest-loser-side' : ''].join(' ')}>
+      <div className={['contest-player contest-me', isFinished && iWon ? 'contest-winner-side' : isFinished ? 'contest-loser-side' : ''].join(' ')}>
         <ScoreBar score={myScore} maxScore={maxScore} />
         <div className="contest-player-info">
-          <span className="contest-score">🐾 x{myScore}</span>
-          <Avatar member={me} size={56} />
+          <span className="contest-score">🐾 {myScore}</span>
+          <Avatar member={me} size={52} />
           <span className="contest-player-name">{me?.name ?? '…'}</span>
         </div>
       </div>
 
-      {/* Bouton tap */}
-      <motion.button
-        className={['contest-tap-button figma-button', isRunning ? 'bg-primary text-surface' : 'bg-surface text-muted opacity-60'].join(' ')}
-        onClick={onTap}
-        disabled={!isRunning}
-        whileTap={isRunning ? { scale: 0.9 } : {}}
-        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-      >
-        {isRunning ? '🐺 ABOYER / HURLER !' : isCountdown ? `Prêt… ${countdownSeconds}` : isFinished ? 'Retour au chat…' : '…'}
-      </motion.button>
+      {/* Footer — instruction ou résultat */}
+      <div className="contest-footer">
+        {isRunning && !micError && (
+          <p className="contest-footer-hint">Crie, aboie, hurle… le plus fort gagne !</p>
+        )}
+        {isCountdown && (
+          <p className="contest-footer-hint">Prépare ta voix… 🎙️</p>
+        )}
+        {isFinished && (
+          <p className="contest-footer-hint">Retour au chat dans quelques secondes…</p>
+        )}
+        {micError && isRunning && (
+          <p className="contest-footer-hint contest-footer-error">{micError}</p>
+        )}
+      </div>
     </motion.div>
   )
 }

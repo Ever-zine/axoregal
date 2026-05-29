@@ -30,14 +30,15 @@ export function ChatPage() {
     phase,
     myScore,
     opponentScore,
+    micVolume,
     countdownSeconds,
     winner,
     pendingChallenge,
     activeContest,
+    micError,
     challenge,
     accept,
     decline,
-    tap,
   } = useContest(group?.id, group?.created_by, refreshGroup)
 
   // CHAT-01 : redirige si pas de groupe
@@ -77,16 +78,18 @@ export function ChatPage() {
   }
 
   function handleOpenChefPanel() {
+    if (!group) return
     setEditName(group.name)
     setEditCategory(group.category_id)
     setChefPanelOpen(true)
   }
 
   async function handleSaveGroup() {
-    if (!group || isSavingGroup) return
+    const g = group
+    if (!g || isSavingGroup) return
     setIsSavingGroup(true)
     try {
-      await updateGroupInfo(group.id, { name: editName.trim() || group.name, category_id: editCategory })
+      await updateGroupInfo(g.id, { name: editName.trim() || g.name, category_id: editCategory })
       await refreshGroup()
       setChefPanelOpen(false)
     } finally {
@@ -246,7 +249,7 @@ export function ChatPage() {
       <MessagesArea
         messages={messages}
         isLoading={isLoading}
-        currentUserId={currentUserId}
+        currentUserId={currentUserId ?? null}
         categoryEmoji={category.emoji}
       />
 
@@ -283,13 +286,13 @@ export function ChatPage() {
             phase={phase}
             myScore={myScore}
             opponentScore={opponentScore}
+            micVolume={micVolume}
             countdownSeconds={countdownSeconds}
             winner={winner}
             myUserId={user?.id ?? ''}
             me={me}
             opponent={opponent}
-            isChallenger={isUserChallenger}
-            onTap={tap}
+            micError={micError}
           />
         )}
       </AnimatePresence>
