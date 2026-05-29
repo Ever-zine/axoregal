@@ -357,7 +357,7 @@ function MessageBubble({ msg, isOwn }: { msg: ChatMessage; isOwn: boolean }) {
     return (
       <div className="message flex items-end justify-end gap-2">
         <span className="text-[10px] text-muted self-end mb-1">{time}</span>
-        <div className="max-w-[82%] rounded-2xl rounded-br-none border-cup bg-primary px-4 py-2 shadow-cup-btn">
+        <div className="max-w-[82%] rounded-2xl rounded-br-none border-cup bg-primary px-5 py-3 shadow-cup-btn">
           <p className="break-words text-sm leading-relaxed text-surface">{msg.content}</p>
         </div>
       </div>
@@ -375,7 +375,7 @@ function MessageBubble({ msg, isOwn }: { msg: ChatMessage; isOwn: boolean }) {
       )}
       <div className="flex max-w-[82%] flex-col gap-1">
         <span className="text-[10px] text-muted font-bold px-1">{name}</span>
-        <div className="rounded-2xl rounded-tl-none border-cup bg-surface px-4 py-2 shadow-cup-btn">
+        <div className="rounded-2xl rounded-tl-none border-cup bg-surface px-5 py-3 shadow-cup-btn">
           <p className="text-sm text-text leading-relaxed break-words">{msg.content}</p>
         </div>
         <span className="text-[10px] text-muted px-1">{time}</span>

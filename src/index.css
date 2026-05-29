@@ -79,7 +79,8 @@ html, body, #root {
 }
 
 html {
-  min-height: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
 }
 
 #root {
@@ -184,7 +185,7 @@ img, svg { display: block; }
 
 .swipe-user-menu {
   position: absolute;
-  left: clamp(16px, 5vw, 22px);
+  right: clamp(16px, 5vw, 22px);
   top: 50%;
   z-index: 40;
   transform: translateY(-50%);
@@ -890,7 +891,7 @@ img, svg { display: block; }
   flex: 1;
   border-radius: 12px;
   padding: clamp(10px, 1.8dvh, 12px) clamp(12px, 3.6vw, 16px);
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .chat-send-button {
@@ -977,7 +978,7 @@ img, svg { display: block; }
 .match-primary-action {
   width: 100%;
   padding: clamp(12px, 2dvh, 16px) clamp(20px, 5vw, 32px);
-  font-size: clamp(1rem, 4.5vw, 1.25rem);
+  font-size: clamp(0.875rem, 3.5vw, 1rem);
 }
 
 .match-leave-action {
@@ -1210,7 +1211,7 @@ img, svg { display: block; }
   }
 
   .swipe-user-menu {
-    left: 36px;
+    right: 36px;
   }
 
   .swipe-menu-popover {
