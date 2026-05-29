@@ -1,21 +1,56 @@
-import { RESTAURANTS, type Restaurant, type Diet, type PriceRange } from '@/data/restaurants'
+import type { Restaurant, Diet, PriceRange } from '@/data/restaurants'
+
+export type { Restaurant }
 
 export interface SearchFilters {
   price: PriceRange
   maxDistanceMeters: number
   diet: Diet
-  categoryId?: string   // pré-rempli depuis le groupe (REST-04)
+  categoryId?: string
+  vibe?: 'rapide' | 'tranquille' | 'festif' | 'romantique' | 'business'
+  outdoor?: boolean
+  noise?: 'calme' | 'animé'
+  speed?: 'fast' | 'slow'
+  healthy?: boolean
+  discovery?: boolean
 }
 
-// Remplacer cette fonction par un appel API réel (Google Places, Yelp…)
-export function searchRestaurants(filters: SearchFilters): Restaurant[] {
-  return RESTAURANTS.filter((r) => {
-    if (filters.categoryId && r.category_id !== filters.categoryId) return false
-    if (r.price !== filters.price) return false
-    if (r.distanceMeters > filters.maxDistanceMeters) return false
-    if (filters.diet !== 'all' && !r.diets.includes(filters.diet)) return false
-    return true
-  }).sort((a, b) => b.rating - a.rating)
+export function searchRestaurants(restaurants: Restaurant[], filters: SearchFilters): Restaurant[] {
+  const PRICE_ORDER: PriceRange[] = ['low', 'medium', 'high']
+
+  const scored = restaurants
+    .filter((r) => {
+      // Hard filters
+      if (r.distanceMeters > filters.maxDistanceMeters) return false
+      if (filters.diet !== 'all' && !r.diets.includes(filters.diet)) return false
+      return true
+    })
+    .map((r) => {
+      let score = 0
+
+      // Price: exact +3, adjacent +1
+      const pDiff = Math.abs(PRICE_ORDER.indexOf(r.price) - PRICE_ORDER.indexOf(filters.price))
+      if (pDiff === 0) score += 3
+      else if (pDiff === 1) score += 1
+
+      // Category match (group pre-filter)
+      if (filters.categoryId && r.category_id === filters.categoryId) score += 2
+
+      // Outdoor preference
+      if (filters.outdoor === true && r.outdoor) score += 2
+
+      // Healthy preference
+      if (filters.healthy === true && r.healthy) score += 2
+
+      // Rating boost
+      score += r.rating * 0.5
+
+      return { r, score }
+    })
+    .sort((a, b) => b.score - a.score || b.r.rating - a.r.rating)
+    .map(({ r }) => r)
+
+  return scored
 }
 
 export function distanceLabel(meters: number): string {
@@ -24,7 +59,7 @@ export function distanceLabel(meters: number): string {
 }
 
 export function walkMinutes(meters: number): number {
-  return Math.ceil(meters / 80) // ~80 m/min
+  return Math.ceil(meters / 80)
 }
 
 export function mapsUrl(restaurant: Restaurant): string {

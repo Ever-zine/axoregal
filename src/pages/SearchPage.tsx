@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGroup } from '@/providers/GroupProvider'
 import { searchRestaurants, type SearchFilters } from '@/services/restaurants'
+import { useRestaurants } from '@/hooks/useRestaurants'
 import { CATEGORIES } from '@/data/categories'
 import { SearchWizard } from '@/components/SearchWizard/SearchWizard'
 import { RestaurantCard } from '@/components/RestaurantCard/RestaurantCard'
@@ -12,6 +13,7 @@ type View = 'wizard' | 'results'
 
 export function SearchPage() {
   const { group } = useGroup()
+  const { data: restaurants = [], isLoading } = useRestaurants()
   const [view, setView] = useState<View>('wizard')
   const [filters, setFilters] = useState<SearchFilters | null>(null)
 
@@ -22,7 +24,7 @@ export function SearchPage() {
     setView('results')
   }
 
-  const results = filters ? searchRestaurants(filters) : []
+  const results = filters ? searchRestaurants(restaurants, filters) : []
 
   return (
     <PageTransition>
@@ -52,7 +54,6 @@ export function SearchPage() {
         </div>
       ) : (
         <div className="figma-main figma-scroll search-results">
-          {/* Bandeau catégorie pré-filtrée (REST-04) */}
           {category && (
             <div className="search-category-pill border-cup bg-surface">
               <span className="text-xl">{category.emoji}</span>
@@ -62,7 +63,16 @@ export function SearchPage() {
             </div>
           )}
 
-          {results.length === 0 ? (
+          {isLoading ? (
+            <motion.div
+              className="search-empty-results"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <span className="text-5xl">⏳</span>
+              <p className="text-sm text-muted">Chargement des restos…</p>
+            </motion.div>
+          ) : results.length === 0 ? (
             <motion.div
               className="search-empty-results"
               initial={{ opacity: 0, y: 20 }}
