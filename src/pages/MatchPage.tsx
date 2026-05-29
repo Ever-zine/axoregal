@@ -37,9 +37,18 @@ function Sparkles() {
   )
 }
 
-const audioRef = useRef<HTMLAudioElement | null>(null)
 
-useEffect(() => {
+export function MatchPage() {
+  const { groupId } = useParams<{ groupId: string }>()
+  const navigate = useNavigate()
+  const { leaveGroup } = useGroup()
+  const [isLeaving, setIsLeaving] = useState(false)
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
+
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
   const audio = new Audio(soundMatch)
   audioRef.current = audio
   audio.play()
@@ -48,14 +57,7 @@ useEffect(() => {
     audio.pause()
     audio.currentTime = 0
   }
-}, [])
-
-export function MatchPage() {
-  const { groupId } = useParams<{ groupId: string }>()
-  const navigate = useNavigate()
-  const { leaveGroup } = useGroup()
-  const [isLeaving, setIsLeaving] = useState(false)
-  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
+  }, [])
 
   const { data: group, isLoading } = useQuery({
     queryKey: ['group', groupId],
