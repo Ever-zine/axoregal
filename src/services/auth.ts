@@ -1,10 +1,12 @@
 import { supabase } from '@/lib/supabase'
 
 export async function signIn(): Promise<void> {
+  const redirectTo = new URL(`${import.meta.env.BASE_URL}auth/callback`, window.location.origin).toString()
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'azure',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo,
       scopes: 'openid email profile User.Read',
     },
   })
