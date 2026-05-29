@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/providers/AuthProvider'
 import { useGroup } from '@/providers/GroupProvider'
+import { useAvailableGroups } from '@/hooks/useSwipes'
 import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { SwipeDeck } from '@/components/SwipeDeck/SwipeDeck'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
@@ -10,6 +11,7 @@ export function SwipePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { group } = useGroup()
+  const { data: availableGroups = [] } = useAvailableGroups()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -68,7 +70,7 @@ export function SwipePage() {
 
       <SwipeDeck />
 
-      {!group && (
+      {!group && availableGroups.length > 0 && (
         <div className="flex-shrink-0 px-5 pb-3">
           <button
             className="w-full bg-surface border-cup rounded-2xl shadow-cup-btn btn-press font-display text-sm text-secondary uppercase py-3"
