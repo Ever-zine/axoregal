@@ -7,6 +7,7 @@ import { useGroup } from '@/providers/GroupProvider'
 import { FoodCharacter } from '@/components/FoodCharacter/FoodCharacter'
 import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { LoadingPage } from './LoadingPage'
+import { ConfirmDialog } from '@/components/ConfirmDialog/ConfirmDialog'
 import './MatchPage.scss'
 
 const EMOJIS = ['⭐', '✨', '🎉', '💥', '🌟', '🎊', '⚡', '🔥', '💫', '🎈', '🏆', '❤️']
@@ -40,6 +41,7 @@ export function MatchPage() {
   const navigate = useNavigate()
   const { leaveGroup } = useGroup()
   const [isLeaving, setIsLeaving] = useState(false)
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
 
   const { data: group, isLoading } = useQuery({
     queryKey: ['group', groupId],
@@ -51,8 +53,8 @@ export function MatchPage() {
 
   const category = CATEGORIES.find((c) => c.id === group.category_id) ?? CATEGORIES[0]
 
-  async function handleLeaveGroup() {
-    if (!window.confirm('Quitter ce groupe ?')) return
+  async function confirmLeaveGroup() {
+    setLeaveConfirmOpen(false)
     setIsLeaving(true)
     try {
       await leaveGroup()
@@ -60,6 +62,10 @@ export function MatchPage() {
     } finally {
       setIsLeaving(false)
     }
+  }
+
+  function handleLeaveGroup() {
+    setLeaveConfirmOpen(true)
   }
 
   return (
@@ -140,6 +146,14 @@ export function MatchPage() {
         </button>
       </div>
     </div>
+    <ConfirmDialog
+      open={leaveConfirmOpen}
+      message="Quitter ce groupe ?"
+      confirmLabel="Quitter"
+      cancelLabel="Annuler"
+      onConfirm={confirmLeaveGroup}
+      onCancel={() => setLeaveConfirmOpen(false)}
+    />
     </PageTransition>
   )
 }

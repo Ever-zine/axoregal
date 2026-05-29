@@ -6,6 +6,7 @@ import { useAvailableGroups, useRecordSwipe, useJoinGroup, type AvailableGroup }
 import { useGroup } from '@/providers/GroupProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
+import { ConfirmDialog } from '@/components/ConfirmDialog/ConfirmDialog'
 
 export function SwipeDeck() {
   const { user } = useAuth()
@@ -13,12 +14,13 @@ export function SwipeDeck() {
   const { data: availableGroups = [], isLoading } = useAvailableGroups()
   const [localSwiped, setLocalSwiped] = useState<string[]>([])
   const [isLeaving, setIsLeaving] = useState(false)
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
   const { mutate: recordSwipe } = useRecordSwipe()
   const { mutate: joinGroup } = useJoinGroup()
   const navigate = useNavigate()
 
-  async function handleLeaveGroup() {
-    if (!window.confirm('Quitter ce groupe ?')) return
+  async function confirmLeaveGroup() {
+    setLeaveConfirmOpen(false)
     setIsLeaving(true)
     try {
       await leaveGroup()
@@ -27,8 +29,13 @@ export function SwipeDeck() {
     }
   }
 
+  function handleLeaveGroup() {
+    setLeaveConfirmOpen(true)
+  }
+
   if (myGroup) {
     return (
+      <>
       <div className="figma-main swipe-empty">
         <span className="text-[80px]">🎉</span>
         <h2 className="figma-title text-3xl">Tu es dans un groupe !</h2>
@@ -47,6 +54,15 @@ export function SwipeDeck() {
           {isLeaving ? 'Départ...' : 'Quitter le groupe'}
         </button>
       </div>
+      <ConfirmDialog
+        open={leaveConfirmOpen}
+        message="Quitter ce groupe ?"
+        confirmLabel="Quitter"
+        cancelLabel="Annuler"
+        onConfirm={confirmLeaveGroup}
+        onCancel={() => setLeaveConfirmOpen(false)}
+      />
+    </>
     )
   }
 

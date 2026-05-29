@@ -10,6 +10,7 @@ import { updateGroupInfo } from '@/services/matching'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { ContestPage } from './ContestPage'
+import { ConfirmDialog } from '@/components/ConfirmDialog/ConfirmDialog'
 import type { ChatMessage } from '@/services/chat'
 import './ChatPage.scss'
 
@@ -19,6 +20,7 @@ export function ChatPage() {
   const { messages, isLoading, isSending, send, currentUserId } = useChat(group?.id)
   const [input, setInput] = useState('')
   const [isLeaving, setIsLeaving] = useState(false)
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
 
   // Chef settings
   const [chefPanelOpen, setChefPanelOpen] = useState(false)
@@ -67,14 +69,18 @@ export function ChatPage() {
     }
   }
 
-  async function handleLeaveGroup() {
-    if (!window.confirm('Quitter ce groupe ? Tu ne verras plus son chat.')) return
+  async function confirmLeaveGroup() {
+    setLeaveConfirmOpen(false)
     setIsLeaving(true)
     try {
       await leaveGroup()
     } finally {
       setIsLeaving(false)
     }
+  }
+
+  function handleLeaveGroup() {
+    setLeaveConfirmOpen(true)
   }
 
   function handleOpenChefPanel() {
@@ -278,6 +284,15 @@ export function ChatPage() {
       </div>
 
       <BottomNav />
+
+      <ConfirmDialog
+        open={leaveConfirmOpen}
+        message="Quitter ce groupe ? Tu ne verras plus son chat."
+        confirmLabel="Quitter"
+        cancelLabel="Annuler"
+        onConfirm={confirmLeaveGroup}
+        onCancel={() => setLeaveConfirmOpen(false)}
+      />
 
       {/* Overlay Alpha Contest */}
       <AnimatePresence>
