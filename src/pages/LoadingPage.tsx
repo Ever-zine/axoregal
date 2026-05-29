@@ -2,6 +2,7 @@ import './LoadingPage.scss'
 import { useEffect, useRef } from 'react'
 import sandwichGif from '@/assets/SANDWICH 1.gif'
 import soundTitre from '@/assets/Titre.m4a'
+import imageTitre from '@/assets/Logo.svg'
 
 export function LoadingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -14,7 +15,10 @@ useEffect(() => {
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full bg-bg gap-8 overflow-hidden">
-      <span className="text-cuphead-lg text-5xl text-secondary">Axoregal</span>
+      <img
+        src={imageTitre}
+        className="w-[600px] h-[200px] object-contain"
+        />
 
       <img
           src={sandwichGif}
