@@ -1,4 +1,4 @@
-import type { Category, AccessoryType } from '@/data/categories'
+import type { Category } from '@/data/categories'
 import './FoodCharacter.scss'
 
 import burgerGif from '@/assets/Burger.gif'
