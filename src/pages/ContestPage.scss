@@ -1,0 +1,177 @@
+.contest-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: var(--color-bg);
+  max-width: min(100%, 430px);
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+}
+
+.contest-header {
+  background: var(--color-accent);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 3px solid #000;
+}
+
+.contest-header-title {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5vw, 24px);
+  color: var(--color-surface);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.contest-player {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 20px;
+  transition: background 0.3s;
+}
+
+.contest-opponent {
+  border-bottom: 3px solid #000;
+}
+
+.contest-me {
+  border-top: 3px solid #000;
+}
+
+.contest-winner-side {
+  background: color-mix(in srgb, var(--color-success) 25%, var(--color-bg));
+  animation: var(--animate-victory-flash);
+}
+
+.contest-loser-side {
+  animation: var(--animate-defeat-dim);
+}
+
+.contest-player-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contest-avatar {
+  border-radius: 50%;
+  border: 3px solid #000;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.contest-avatar-initial {
+  background: var(--color-primary);
+  color: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.contest-avatar-placeholder {
+  border-radius: 50%;
+  border: 3px dashed #000;
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.contest-player-name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contest-score {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--color-text);
+  min-width: 64px;
+  text-align: right;
+}
+
+.contest-bar-track {
+  height: 14px;
+  background: var(--color-surface);
+  border: 3px solid #000;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.contest-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  transform-origin: left;
+  border-radius: 2px;
+}
+
+.contest-center {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border-top: 3px solid #000;
+  border-bottom: 3px solid #000;
+}
+
+.contest-countdown {
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.contest-running-label {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  animation: charWiggle 0.5s steps(4, end) infinite;
+}
+
+.contest-result {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 6vw, 32px);
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.contest-tap-button {
+  margin: 12px 16px;
+  margin-bottom: max(12px, env(safe-area-inset-bottom));
+  padding: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(16px, 4vw, 22px);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 3px solid #000;
+  border-radius: 12px;
+  box-shadow: var(--shadow-btn);
+  transition: box-shadow 0.05s, transform 0.05s;
+}
+
+/* star (sparkle) — identique à MatchPage */
+.star {
+  position: absolute;
+  font-size: clamp(18px, 4vw, 26px);
+  animation: var(--animate-sparkle);
+  animation-fill-mode: forwards;
+}

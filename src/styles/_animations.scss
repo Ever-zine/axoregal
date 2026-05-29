@@ -75,3 +75,26 @@
   70%  { transform: translateY(-6px) scale(1.05); opacity: 1; }
   100% { transform: translateY(0) scale(1); opacity: 1; }
 }
+
+// Alpha Contest
+@keyframes tapPulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.91); }
+  100% { transform: scale(1); }
+}
+
+@keyframes countdownSlam {
+  0%   { transform: scale(2.5) translateY(-20px); opacity: 0; }
+  60%  { transform: scale(0.9)  translateY(4px);  opacity: 1; }
+  100% { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+@keyframes victoryFlash {
+  0%, 100% { background-color: var(--color-success); }
+  50%       { background-color: var(--color-secondary); }
+}
+
+@keyframes defeatDim {
+  0%   { opacity: 1; }
+  100% { opacity: 0.45; }
+}

@@ -11,6 +11,7 @@ export interface MatchGroup {
   name: string
   category_id: string
   session_date: string
+  created_by: string | null
   members: GroupMember[]
 }
 
@@ -25,14 +26,14 @@ export async function getMyTodayGroup(userId: string): Promise<MatchGroup | null
   if (error) throw error
   if (!data?.groups) return null
 
-  const group = data.groups as unknown as { id: string; name: string; category_id: string; session_date: string }
+  const group = data.groups as unknown as { id: string; name: string; category_id: string; session_date: string; created_by: string | null }
   return fetchGroupWithMembers(group.id)
 }
 
 export async function fetchGroupWithMembers(groupId: string): Promise<MatchGroup> {
   const { data: group, error: gErr } = await supabase
     .from('groups')
-    .select('id, name, category_id, session_date')
+    .select('id, name, category_id, session_date, created_by')
     .eq('id', groupId)
     .single()
   if (gErr) throw gErr
@@ -77,6 +78,14 @@ export async function leaveGroup(userId: string, groupId: string): Promise<void>
     .eq('user_id', userId)
     .eq('group_id', groupId)
 
+  if (error) throw error
+}
+
+export async function updateGroupInfo(
+  groupId: string,
+  patch: { name?: string; category_id?: string },
+): Promise<void> {
+  const { error } = await supabase.from('groups').update(patch).eq('id', groupId)
   if (error) throw error
 }
 
