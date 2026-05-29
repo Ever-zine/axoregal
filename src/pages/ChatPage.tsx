@@ -1,25 +1,60 @@
 import { useState, type KeyboardEvent } from 'react'
 import { Navigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useGroup } from '@/providers/GroupProvider'
+import { useAuth } from '@/providers/AuthProvider'
 import { useChat, useScrollToBottom } from '@/hooks/useChat'
+import { useContest } from '@/hooks/useContest'
 import { CATEGORIES } from '@/data/categories'
+import { updateGroupInfo } from '@/services/matching'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { PageTransition } from '@/components/PageTransition/PageTransition'
+import { ContestPage } from './ContestPage'
+import { ConfirmDialog } from '@/components/ConfirmDialog/ConfirmDialog'
 import type { ChatMessage } from '@/services/chat'
 import './ChatPage.scss'
 
 export function ChatPage() {
-  const { group, leaveGroup } = useGroup()
+  const { user } = useAuth()
+  const { group, isChef, leaveGroup, refreshGroup } = useGroup()
   const { messages, isLoading, isSending, send, currentUserId } = useChat(group?.id)
   const [input, setInput] = useState('')
   const [isLeaving, setIsLeaving] = useState(false)
-  const messagesRef = useScrollToBottom(messages.length)
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
+
+  // Chef settings
+  const [chefPanelOpen, setChefPanelOpen] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editCategory, setEditCategory] = useState('')
+  const [isSavingGroup, setIsSavingGroup] = useState(false)
+
+  const {
+    phase,
+    myScore,
+    opponentScore,
+    micVolume,
+    countdownSeconds,
+    winner,
+    pendingChallenge,
+    activeContest,
+    micError,
+    challenge,
+    accept,
+    decline,
+  } = useContest(group?.id, group?.created_by, refreshGroup)
 
   // CHAT-01 : redirige si pas de groupe
   if (!group) return <Navigate to="/swipe" replace />
 
   const category = CATEGORIES.find((c) => c.id === group.category_id) ?? CATEGORIES[0]
   const canSend = input.trim().length > 0 && !isSending
+
+  const me = group.members.find((m) => m.id === user?.id) ?? null
+  const isUserChallenger = user?.id === activeContest?.challenger
+  const opponentId = isUserChallenger ? activeContest?.chef : activeContest?.challenger
+  const opponent = group.members.find((m) => m.id === opponentId) ?? null
+
+  const showContest = phase === 'countdown' || phase === 'running' || phase === 'finished'
 
   function handleSend() {
     if (!canSend) return
@@ -34,8 +69,8 @@ export function ChatPage() {
     }
   }
 
-  async function handleLeaveGroup() {
-    if (!window.confirm('Quitter ce groupe ? Tu ne verras plus son chat.')) return
+  async function confirmLeaveGroup() {
+    setLeaveConfirmOpen(false)
     setIsLeaving(true)
     try {
       await leaveGroup()
@@ -44,11 +79,65 @@ export function ChatPage() {
     }
   }
 
+  function handleLeaveGroup() {
+    setLeaveConfirmOpen(true)
+  }
+
+  function handleOpenChefPanel() {
+    if (!group) return
+    setEditName(group.name)
+    setEditCategory(group.category_id)
+    setChefPanelOpen(true)
+  }
+
+  async function handleSaveGroup() {
+    const g = group
+    if (!g || isSavingGroup) return
+    setIsSavingGroup(true)
+    try {
+      await updateGroupInfo(g.id, { name: editName.trim() || g.name, category_id: editCategory })
+      await refreshGroup()
+      setChefPanelOpen(false)
+    } finally {
+      setIsSavingGroup(false)
+    }
+  }
+
   return (
     <PageTransition>
     <div className="figma-screen chat-screen">
     <div className="figma-screen-bg" />
-    <div className="figma-page chat-page">
+    <div className="figma-page chat-page" style={{ position: 'relative' }}>
+
+      {/* Bandeau défi chef entrant */}
+      <AnimatePresence>
+        {isChef && pendingChallenge && (
+          <motion.div
+            className="contest-challenge-banner border-cup"
+            initial={{ y: -70, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -70, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
+            <span className="contest-banner-text">🐺 {pendingChallenge.challengerName} te défie !</span>
+            <div className="contest-banner-actions">
+              <button
+                className="figma-button contest-banner-accept bg-success text-text"
+                onClick={accept}
+              >
+                Accepter
+              </button>
+              <button
+                className="contest-banner-decline"
+                onClick={decline}
+              >
+                Refuser
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="chat-header border-cup bg-surface">
         <span className="chat-header-emoji">{category.emoji}</span>
@@ -80,36 +169,95 @@ export function ChatPage() {
             ),
           )}
         </div>
+
+        {/* Bouton chef settings */}
+        {isChef && (
+          <button
+            className="chat-chef-settings-btn"
+            onClick={handleOpenChefPanel}
+            aria-label="Paramètres du groupe"
+          >
+            ⚙️
+          </button>
+        )}
+
+        {/* Bouton défi (membres non-chef) */}
+        {!isChef && group.created_by && (
+          <button
+            className={['figma-button chat-challenge-btn bg-accent text-surface', phase !== 'idle' ? 'opacity-50 cursor-not-allowed' : 'btn-press'].join(' ')}
+            onClick={challenge}
+            disabled={phase !== 'idle'}
+            title="Défier le chef !"
+          >
+            🐺
+          </button>
+        )}
+
         <button
           className="chat-leave-button"
           onClick={handleLeaveGroup}
           disabled={isLeaving}
         >
           {isLeaving ? '...' : 'Quitter'}
-
         </button>
       </header>
 
+      {/* Panel chef (settings) */}
+      <AnimatePresence>
+        {chefPanelOpen && (
+          <motion.div
+            className="chef-panel border-cup bg-surface"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+          >
+            <div className="chef-panel-header">
+              <span className="figma-title chef-panel-title">⚙️ Modifier le groupe</span>
+              <button className="chef-panel-close" onClick={() => setChefPanelOpen(false)}>✕</button>
+            </div>
+            <label className="chef-panel-label">Nom du groupe</label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              maxLength={60}
+              className="create-group-input border-cup bg-bg text-text placeholder:text-muted focus:border-primary focus:outline-none"
+            />
+            <label className="chef-panel-label">Type de cuisine</label>
+            <div className="chef-category-grid">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  className={[
+                    'create-category-option border-cup btn-press',
+                    editCategory === cat.id ? 'bg-primary shadow-cup-card' : 'bg-surface shadow-cup-btn text-muted',
+                  ].join(' ')}
+                  style={editCategory === cat.id ? { color: cat.color } : {}}
+                  onClick={() => setEditCategory(cat.id)}
+                >
+                  <span className="text-xl">{cat.emoji}</span>
+                  <span className="text-xs">{cat.name}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              className="figma-button bg-success text-text btn-press chef-panel-save"
+              onClick={handleSaveGroup}
+              disabled={isSavingGroup}
+            >
+              {isSavingGroup ? 'Sauvegarde…' : 'Enregistrer ✓'}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Liste des messages */}
-      <div
-        ref={messagesRef}
-        className="messages figma-main chat-messages"
-      >
-        {isLoading && (
-          <p className="text-center text-muted text-sm py-8">Chargement…</p>
-        )}
-
-        {!isLoading && messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center flex-1 gap-3 text-center px-6">
-            <span className="text-5xl">{category.emoji}</span>
-            <p className="figma-title chat-empty-title text-muted">Soyez les premiers à parler !</p>
-          </div>
-        )}
-
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} msg={msg} isOwn={msg.user_id === currentUserId} />
-        ))}
-      </div>
+      <MessagesArea
+        messages={messages}
+        isLoading={isLoading}
+        currentUserId={currentUserId ?? null}
+        categoryEmoji={category.emoji}
+      />
 
       {/* Barre d'envoi */}
       <div className="chat-composer border-cup bg-surface">
@@ -136,9 +284,67 @@ export function ChatPage() {
       </div>
 
       <BottomNav />
+
+      <ConfirmDialog
+        open={leaveConfirmOpen}
+        message="Quitter ce groupe ? Tu ne verras plus son chat."
+        confirmLabel="Quitter"
+        cancelLabel="Annuler"
+        onConfirm={confirmLeaveGroup}
+        onCancel={() => setLeaveConfirmOpen(false)}
+      />
+
+      {/* Overlay Alpha Contest */}
+      <AnimatePresence>
+        {showContest && (
+          <ContestPage
+            phase={phase}
+            myScore={myScore}
+            opponentScore={opponentScore}
+            micVolume={micVolume}
+            countdownSeconds={countdownSeconds}
+            winner={winner}
+            myUserId={user?.id ?? ''}
+            me={me}
+            opponent={opponent}
+            micError={micError}
+          />
+        )}
+      </AnimatePresence>
     </div>
     </div>
     </PageTransition>
+  )
+}
+
+function MessagesArea({
+  messages,
+  isLoading,
+  currentUserId,
+  categoryEmoji,
+}: {
+  messages: ChatMessage[]
+  isLoading: boolean
+  currentUserId: string | null
+  categoryEmoji: string
+}) {
+  const messagesRef = useScrollToBottom(messages.length)
+
+  return (
+    <div ref={messagesRef} className="messages figma-main chat-messages">
+      {isLoading && (
+        <p className="text-center text-muted text-sm py-8">Chargement…</p>
+      )}
+      {!isLoading && messages.length === 0 && (
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 text-center px-6">
+          <span className="text-5xl">{categoryEmoji}</span>
+          <p className="figma-title chat-empty-title text-muted">Soyez les premiers à parler !</p>
+        </div>
+      )}
+      {messages.map((msg) => (
+        <MessageBubble key={msg.id} msg={msg} isOwn={msg.user_id === currentUserId} />
+      ))}
+    </div>
   )
 }
 
@@ -160,7 +366,6 @@ function MessageBubble({ msg, isOwn }: { msg: ChatMessage; isOwn: boolean }) {
 
   return (
     <div className="message flex items-end gap-2">
-      {/* Avatar */}
       {avatar ? (
         <img src={avatar} alt={name} className="w-8 h-8 rounded-full border-[2px] border-black object-cover flex-shrink-0 self-end" />
       ) : (

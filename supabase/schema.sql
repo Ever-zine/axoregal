@@ -4,6 +4,7 @@
 -- ============================================================
 
 -- Supprime les tables dans l'ordre (clés étrangères)
+DROP TABLE IF EXISTS public.contests      CASCADE;
 DROP TABLE IF EXISTS public.messages      CASCADE;
 DROP TABLE IF EXISTS public.swipes        CASCADE;
 DROP TABLE IF EXISTS public.group_members CASCADE;
@@ -15,6 +16,8 @@ DROP FUNCTION IF EXISTS public.sync_profile()       CASCADE;
 DROP FUNCTION IF EXISTS public.check_and_create_match() CASCADE;
 DROP FUNCTION IF EXISTS public.create_group(UUID, TEXT, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.join_random_group(UUID)        CASCADE;
+DROP FUNCTION IF EXISTS public.accept_contest(UUID)           CASCADE;
+DROP FUNCTION IF EXISTS public.finish_contest(UUID, INT, INT) CASCADE;
 
 -- Supprime les policies Storage
 DROP POLICY IF EXISTS "Avatars lisibles par tous"              ON storage.objects;
@@ -78,6 +81,10 @@ CREATE POLICY "Groupes visibles par tous les connectés"
   ON public.groups FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Utilisateur crée un groupe"
   ON public.groups FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = created_by);
+CREATE POLICY "Chef peut modifier son groupe"
+  ON public.groups FOR UPDATE TO authenticated
+  USING (auth.uid() = created_by)
   WITH CHECK (auth.uid() = created_by);
 
 CREATE TABLE public.group_members (
@@ -219,6 +226,91 @@ BEGIN
   ON CONFLICT (group_id, user_id) DO NOTHING;
 
   RETURN QUERY SELECT v_group_id, v_category_id, v_name;
+END;
+$$;
+
+-- ============================================================
+-- Contests (Alpha Contest)
+-- ============================================================
+
+CREATE TABLE public.contests (
+  id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  group_id         UUID REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
+  challenger       UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  chef             UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  status           TEXT CHECK (status IN ('pending','accepted','declined','running','finished')) NOT NULL DEFAULT 'pending',
+  challenger_score INT,
+  chef_score       INT,
+  winner           UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at       TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  finished_at      TIMESTAMPTZ
+);
+
+ALTER TABLE public.contests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Contests visibles par les membres"
+  ON public.contests FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.group_members gm
+      WHERE gm.group_id = contests.group_id AND gm.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Membre peut lancer un défi"
+  ON public.contests FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = challenger);
+
+CREATE POLICY "Participants peuvent mettre à jour le contest"
+  ON public.contests FOR UPDATE TO authenticated
+  USING (auth.uid() = challenger OR auth.uid() = chef);
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.contests;
+
+-- RPC : le chef accepte le défi
+CREATE OR REPLACE FUNCTION public.accept_contest(p_contest_id UUID)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  UPDATE public.contests
+  SET status = 'accepted'
+  WHERE id = p_contest_id
+    AND chef = auth.uid()
+    AND status = 'pending';
+END;
+$$;
+
+-- RPC : finalise le contest et transfère le titre de chef
+CREATE OR REPLACE FUNCTION public.finish_contest(
+  p_contest_id       UUID,
+  p_challenger_score INT,
+  p_chef_score       INT
+)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_contest public.contests%ROWTYPE;
+  v_winner  UUID;
+BEGIN
+  SELECT * INTO v_contest FROM public.contests WHERE id = p_contest_id;
+  IF v_contest.status NOT IN ('accepted', 'running') THEN RETURN; END IF;
+
+  -- Égalité → challenger gagne
+  IF p_challenger_score >= p_chef_score THEN
+    v_winner := v_contest.challenger;
+  ELSE
+    v_winner := v_contest.chef;
+  END IF;
+
+  UPDATE public.contests
+  SET status           = 'finished',
+      challenger_score = p_challenger_score,
+      chef_score       = p_chef_score,
+      winner           = v_winner,
+      finished_at      = NOW()
+  WHERE id = p_contest_id;
+
+  UPDATE public.groups
+  SET created_by = v_winner
+  WHERE id = v_contest.group_id;
 END;
 $$;
 

@@ -31,6 +31,11 @@
   --animate-sparkle:     sparkle 0.9s steps(6, end) forwards;
   --animate-match-title: matchTitle 0.6s steps(4, end) forwards;
   --animate-avatar-pop:  avatarPop 0.5s steps(3, end) forwards;
+
+  --animate-tap-pulse:       tapPulse 0.15s steps(3, end) both;
+  --animate-countdown-slam:  countdownSlam 0.35s steps(4, end) both;
+  --animate-victory-flash:   victoryFlash 0.6s steps(4, end) 3;
+  --animate-defeat-dim:      defeatDim 0.5s steps(3, end) forwards;
 }
 
 /* ── Utilitaires CupHead ───────────────────────────────── */
@@ -177,6 +182,32 @@ img, svg { display: block; }
   height: clamp(34px, 9vw, 42px);
 }
 
+.swipe-user-menu {
+  position: absolute;
+  left: clamp(16px, 5vw, 22px);
+  top: 50%;
+  z-index: 40;
+  transform: translateY(-50%);
+}
+
+.swipe-user-button {
+  display: block;
+  border-radius: 999px;
+}
+
+.swipe-user-menu .swipe-avatar {
+  position: static;
+}
+
+.swipe-menu-popover {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 10px);
+  width: min(72vw, 220px);
+  overflow: hidden;
+  border-radius: 18px;
+}
+
 .swipe-status {
   z-index: 10;
   display: flex;
@@ -246,7 +277,12 @@ img, svg { display: block; }
   align-items: center;
   justify-content: space-between;
   overflow: hidden;
+  background: var(--color-bg);
   padding: clamp(22px, 3.6dvh, 32px) clamp(18px, 5vw, 26px) clamp(20px, 3.3dvh, 28px);
+}
+
+.swipe-card.figma-card {
+  background: var(--color-bg);
 }
 
 .swipe-card-title {
@@ -316,6 +352,18 @@ img, svg { display: block; }
   flex-shrink: 0;
   flex-direction: column;
   gap: clamp(10px, 1.9dvh, 16px);
+}
+
+.swipe-surprise {
+  flex-shrink: 0;
+  padding: 0 clamp(16px, 5vw, 22px) clamp(10px, 1.8dvh, 14px);
+}
+
+.swipe-surprise-button {
+  width: 100%;
+  min-height: clamp(46px, 6.4dvh, 54px);
+  font-size: clamp(0.9rem, 3.5vw, 1rem);
+  text-transform: uppercase;
 }
 
 .swipe-action {
@@ -946,16 +994,230 @@ img, svg { display: block; }
 }
 
 @media (min-width: 900px) {
+  .figma-screen {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 28px;
+  }
+
+  .figma-page {
+    width: min(100%, 1120px);
+    max-height: 900px;
+    overflow: hidden;
+    border: 4px solid var(--color-text);
+    border-radius: 28px;
+    background: rgba(252, 248, 249, 0.78);
+    box-shadow: 0 10px 0 var(--color-text);
+  }
+
+  .figma-main,
+  .bottom-nav {
+    width: 100%;
+    max-width: none;
+  }
+
   .figma-screen::before {
-    left: max(24px, calc(50% - 200px));
+    top: 48px;
+    left: max(44px, calc(50% - 610px));
+    width: 220px;
+    height: 160px;
   }
 
   .figma-screen::after {
-    right: max(-36px, calc(50% - 250px));
+    right: max(16px, calc(50% - 610px));
+    bottom: 132px;
+  }
+
+  .swipe-header,
+  .search-header,
+  .create-group-header {
+    min-height: 82px;
+    padding-inline: 36px;
+    border-bottom: 3px solid var(--color-text);
+    background: var(--color-surface);
+  }
+
+  .swipe-brand,
+  .search-brand,
+  .create-group-title {
+    max-width: none;
+    font-size: 2rem;
+  }
+
+  .swipe-avatar {
+    left: 36px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .swipe-user-menu {
+    left: 36px;
+  }
+
+  .swipe-menu-popover {
+    width: 240px;
+  }
+
+  .swipe-deck {
+    padding: 30px 44px;
+  }
+
+  .swipe-deck-inner {
+    max-width: 1040px;
+  }
+
+  .swipe-card-shell {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .swipe-card {
+    width: min(100%, 620px);
+    height: clamp(340px, 45dvh, 430px);
+    padding-inline: 42px;
+  }
+
+  .swipe-card-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+
+  .swipe-card-subtitle {
+    font-size: 1.05rem;
+  }
+
+  .swipe-mascot-wrap .body {
+    width: 168px;
+    height: 168px;
+  }
+
+  .swipe-mascot-wrap .body > span {
+    font-size: 4.8rem;
+  }
+
+  .swipe-actions,
+  .swipe-surprise {
+    width: min(100%, 620px);
+  }
+
+  .swipe-surprise {
+    align-self: center;
+    padding-inline: 0;
+  }
+
+  .search-wizard,
+  .search-results,
+  .create-group-content,
+  .chat-messages {
+    padding-inline: 44px;
+  }
+
+  .search-wizard {
+    width: 100%;
+  }
+
+  .search-progress {
+    padding-top: 30px;
+  }
+
+  .search-question-pane {
+    padding-inline: 0;
+  }
+
+  .search-question {
+    padding-block: 24px 28px;
+    font-size: clamp(2.6rem, 4vw, 4rem);
+    text-align: center;
+  }
+
+  .search-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-content: start;
+  }
+
+  .search-option {
+    min-height: 142px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .search-results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 18px;
+  }
+
+  .search-category-pill,
+  .search-results-count,
+  .search-empty-results {
+    grid-column: 1 / -1;
+  }
+
+  .restaurant-card {
+    min-height: 124px;
+    padding: 18px;
+  }
+
+  .restaurant-card-title {
+    font-size: 1.65rem;
+  }
+
+  .restaurant-sheet {
+    bottom: 32px;
+    max-width: 560px;
+    border: 4px solid var(--color-text);
+    border-radius: 24px 24px 0 0;
+    padding-bottom: 24px;
+  }
+
+  .restaurant-sheet-content {
+    padding-inline: 30px;
+  }
+
+  .create-group-content {
+    gap: 28px;
+    padding-block: 36px 28px;
+  }
+
+  .create-group-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .create-category-option {
+    min-height: 96px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .create-group-footer {
+    align-self: center;
+    width: min(100%, 520px);
+    padding-inline: 0;
+  }
+
+  .chat-header {
+    margin: 24px 44px 0;
+  }
+
+  .chat-composer {
+    margin-inline: 44px;
+  }
+
+  .bottom-nav {
+    min-height: 76px;
+    border-top-width: 3px;
+  }
+
+  .bottom-nav-icon {
+    font-size: 1.55rem;
   }
 }
 
-@media (min-width: 700px) and (min-height: 760px) {
+@media (min-width: 700px) and (max-width: 899px) and (min-height: 760px) {
   .figma-page {
     width: min(100%, 460px);
   }

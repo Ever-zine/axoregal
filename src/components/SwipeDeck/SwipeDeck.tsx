@@ -6,6 +6,7 @@ import { useAvailableGroups, useRecordSwipe, useJoinGroup, type AvailableGroup }
 import { useGroup } from '@/providers/GroupProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
+import { ConfirmDialog } from '@/components/ConfirmDialog/ConfirmDialog'
 import soundGood from '@/assets/Wouhou.m4a'
 import soundNul from '@/assets/Pinpin.m4a'
 
@@ -15,12 +16,13 @@ export function SwipeDeck() {
   const { data: availableGroups = [], isLoading } = useAvailableGroups()
   const [localSwiped, setLocalSwiped] = useState<string[]>([])
   const [isLeaving, setIsLeaving] = useState(false)
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false)
   const { mutate: recordSwipe } = useRecordSwipe()
   const { mutate: joinGroup } = useJoinGroup()
   const navigate = useNavigate()
 
-  async function handleLeaveGroup() {
-    if (!window.confirm('Quitter ce groupe ?')) return
+  async function confirmLeaveGroup() {
+    setLeaveConfirmOpen(false)
     setIsLeaving(true)
     try {
       await leaveGroup()
@@ -29,8 +31,13 @@ export function SwipeDeck() {
     }
   }
 
+  function handleLeaveGroup() {
+    setLeaveConfirmOpen(true)
+  }
+
   if (myGroup) {
     return (
+      <>
       <div className="figma-main swipe-empty">
         <span className="text-[80px]">🎉</span>
         <h2 className="figma-title text-3xl">Tu es dans un groupe !</h2>
@@ -49,12 +56,20 @@ export function SwipeDeck() {
           {isLeaving ? 'Départ...' : 'Quitter le groupe'}
         </button>
       </div>
+      <ConfirmDialog
+        open={leaveConfirmOpen}
+        message="Quitter ce groupe ?"
+        confirmLabel="Quitter"
+        cancelLabel="Annuler"
+        onConfirm={confirmLeaveGroup}
+        onCancel={() => setLeaveConfirmOpen(false)}
+      />
+    </>
     )
   }
 
   const queue = availableGroups.filter((g) => !localSwiped.includes(g.id))
   const topGroup = queue[0]
-  const nextGroup = queue[1]
 
   function handleSwipe(groupId: string, direction: 'left' | 'right') {
     setLocalSwiped((prev) => [...prev, groupId])
@@ -101,12 +116,6 @@ export function SwipeDeck() {
     <div className="figma-main swipe-deck figma-scroll">
       <div className="swipe-deck-inner">
         <div className="swipe-card-stage">
-          {nextGroup && (
-            <div className="absolute inset-0 scale-[0.94] translate-y-3">
-              <GroupCard group={nextGroup} onSwipe={() => {}} isTop={false} />
-            </div>
-          )}
-
           <AnimatePresence>
             <motion.div
               key={topGroup.id}
