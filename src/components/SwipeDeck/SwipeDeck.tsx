@@ -9,24 +9,42 @@ import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
 
 export function SwipeDeck() {
   const { user } = useAuth()
-  const { group: myGroup } = useGroup()
+  const { group: myGroup, leaveGroup } = useGroup()
   const { data: availableGroups = [], isLoading } = useAvailableGroups()
   const [localSwiped, setLocalSwiped] = useState<string[]>([])
+  const [isLeaving, setIsLeaving] = useState(false)
   const { mutate: recordSwipe } = useRecordSwipe()
   const { mutate: joinGroup } = useJoinGroup()
   const navigate = useNavigate()
 
+  async function handleLeaveGroup() {
+    if (!window.confirm('Quitter ce groupe ?')) return
+    setIsLeaving(true)
+    try {
+      await leaveGroup()
+    } finally {
+      setIsLeaving(false)
+    }
+  }
+
   if (myGroup) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center px-8">
+      <div className="figma-main swipe-empty">
         <span className="text-[80px]">🎉</span>
-        <h2 className="text-cuphead-lg text-2xl text-secondary">Tu es dans un groupe !</h2>
-        <p className="text-muted font-semibold text-lg">«{myGroup.name}»</p>
+        <h2 className="figma-title text-3xl">Tu es dans un groupe !</h2>
+        <p className="text-lg font-semibold text-muted">«{myGroup.name}»</p>
         <button
-          className="bg-success text-text font-display text-lg px-8 py-3 border-cup-xl rounded-2xl shadow-cup-card btn-press uppercase"
+          className="figma-button bg-success px-8 text-lg text-text"
           onClick={() => navigate('/chat')}
         >
-          Aller au chat 💬
+          Aller au chat
+        </button>
+        <button
+          className="text-sm font-bold text-muted underline"
+          onClick={handleLeaveGroup}
+          disabled={isLeaving}
+        >
+          {isLeaving ? 'Départ...' : 'Quitter le groupe'}
         </button>
       </div>
     )
@@ -38,65 +56,61 @@ export function SwipeDeck() {
 
   function handleSwipe(groupId: string, direction: 'left' | 'right') {
     setLocalSwiped((prev) => [...prev, groupId])
-    if (direction === 'right') {
-      recordSwipe({ groupId, direction })
-      if (user) joinGroup(groupId)
-    } else {
-      recordSwipe({ groupId, direction })
-    }
+    recordSwipe({ groupId, direction })
+    if (direction === 'right' && user) joinGroup(groupId)
   }
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <span className="text-muted font-semibold">Chargement des groupes…</span>
+      <div className="figma-main swipe-empty">
+        <span className="font-semibold text-muted">Chargement des groupes...</span>
       </div>
     )
   }
 
   if (!topGroup) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center px-8">
-        <span className="text-[80px] animate-whirl">🍽️</span>
-        <h2 className="text-cuphead-lg text-3xl text-secondary">Aucun groupe dispo</h2>
-        <p className="text-muted font-semibold">Sois le premier à en créer un !</p>
+      <div className="figma-main swipe-empty">
+        <span className="text-[80px] animate-whirl">✦</span>
+        <h2 className="figma-title text-3xl">Aucun groupe dispo</h2>
+        <p className="font-semibold text-muted">Sois le premier à en créer un !</p>
         <button
-          className="bg-primary text-text font-display text-lg px-8 py-3 border-cup-xl rounded-2xl shadow-cup-card btn-press uppercase"
+          className="figma-button bg-primary px-8 text-lg text-surface"
           onClick={() => navigate('/create-group')}
         >
-          Créer un groupe ✚
+          Créer un groupe
         </button>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 pb-2">
-      <div className="relative w-full max-w-[360px] h-full">
-        {/* Carte du dessous */}
-        {nextGroup && (
-          <div className="absolute inset-0 scale-[0.94] translate-y-3">
-            <GroupCard group={nextGroup} onSwipe={() => {}} isTop={false} />
-          </div>
-        )}
+    <div className="figma-main swipe-deck figma-scroll">
+      <div className="swipe-deck-inner">
+        <div className="swipe-card-stage">
+          {nextGroup && (
+            <div className="absolute inset-0 scale-[0.94] translate-y-3">
+              <GroupCard group={nextGroup} onSwipe={() => {}} isTop={false} />
+            </div>
+          )}
 
-        {/* Carte du dessus */}
-        <AnimatePresence>
-          <motion.div
-            key={topGroup.id}
-            className="absolute inset-0 z-10"
-            initial={{ scale: 0.94, y: 12 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          >
-            <GroupCard
-              group={topGroup}
-              onSwipe={(dir) => handleSwipe(topGroup.id, dir)}
-              isTop
-            />
-          </motion.div>
-        </AnimatePresence>
+          <AnimatePresence>
+            <motion.div
+              key={topGroup.id}
+              className="absolute inset-0 z-10"
+              initial={{ scale: 0.94, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            >
+              <GroupCard
+                group={topGroup}
+                onSwipe={(dir) => handleSwipe(topGroup.id, dir)}
+                isTop
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   )

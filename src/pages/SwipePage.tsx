@@ -14,29 +14,29 @@ export function SwipePage() {
 
   return (
     <PageTransition>
-    <div className="flex flex-col h-full bg-bg overflow-hidden">
-      <header className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b-[2px] border-black">
-        <span className="text-cuphead-lg text-2xl text-secondary">Axoregal</span>
+    <div className="figma-screen swipe-screen">
+    <div className="figma-screen-bg" />
+    <div className="figma-page swipe-page">
+      <header className="swipe-header">
+        <span className="figma-brand swipe-brand">AxoRégale</span>
         {user?.avatar ? (
-          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full border-cup object-cover" />
+          <img src={user.avatar} alt={user.name} className="swipe-avatar rounded-full border-cup object-cover" />
         ) : (
-          <div className="w-10 h-10 rounded-full border-cup bg-primary flex items-center justify-center font-display text-base text-text">
+          <div className="swipe-avatar flex items-center justify-center rounded-full border-cup bg-primary font-display text-base text-surface">
             {user?.name.charAt(0).toUpperCase()}
           </div>
         )}
       </header>
 
       {isOpen ? (
-        <div className="flex-shrink-0 bg-success border-b-[2px] border-black px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-[18px]">🔥</span>
-          <span className="font-display text-sm text-black uppercase tracking-wider">
+        <div className="swipe-status border-cup bg-success">
+          <span className="font-body text-xs font-bold text-text">
             Matching ouvert jusqu'à {endLabel}
           </span>
         </div>
       ) : (
-        <div className="flex-shrink-0 bg-surface border-b-[2px] border-black px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-[16px]">⏰</span>
-          <span className="font-body text-xs text-muted font-semibold">
+        <div className="swipe-status border-cup bg-surface">
+          <span className="font-body text-xs font-bold text-muted">
             Matching actif de {startLabel} à {endLabel}
           </span>
         </div>
@@ -56,6 +56,7 @@ export function SwipePage() {
       )}
 
       <BottomNav />
+    </div>
     </div>
     </PageTransition>
   )

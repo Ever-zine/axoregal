@@ -70,17 +70,17 @@ export function SearchWizard({ onComplete, defaultCategoryId }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-bg overflow-hidden">
+    <div className="figma-main search-wizard">
       {/* Progress */}
-      <div className="flex-shrink-0 flex items-center justify-center gap-3 pt-8 pb-4">
+      <div className="search-progress">
         {STEPS.map((_, i) => (
           <div
             key={i}
             className={[
-              'h-2 rounded-full border-[2px] border-black transition-all duration-200',
-              i < stepIdx  ? 'w-8 bg-success' :
-              i === stepIdx ? 'w-8 bg-primary' :
-              'w-4 bg-surface',
+              'h-3 rounded-full border-[2px] border-black transition-all duration-200',
+              i < stepIdx  ? 'w-10 bg-secondary' :
+              i === stepIdx ? 'w-10 bg-primary' :
+              'w-5 bg-surface',
             ].join(' ')}
           />
         ))}
@@ -88,16 +88,16 @@ export function SearchWizard({ onComplete, defaultCategoryId }: Props) {
 
       {/* Catégorie pré-filtrée (REST-04) */}
       {category && (
-        <div className="flex-shrink-0 mx-4 mb-2 flex items-center gap-2 px-4 py-2 bg-surface border-cup rounded-xl">
+        <div className="search-category-pill border-cup bg-surface">
           <span className="text-xl">{category.emoji}</span>
-          <span className="text-xs font-bold text-muted uppercase tracking-wider flex-1">
+          <span className="flex-1 text-xs font-bold text-muted">
             Filtré sur {category.name}
           </span>
         </div>
       )}
 
       {/* Question + options */}
-      <div className="flex-1 flex flex-col px-4 overflow-hidden">
+      <div className="search-question-pane">
         <AnimatePresence mode="wait">
           <motion.div
             key={stepIdx}
@@ -105,25 +105,28 @@ export function SearchWizard({ onComplete, defaultCategoryId }: Props) {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="flex flex-col flex-1 overflow-hidden"
+            className="search-step"
           >
-            <h2 className="text-cuphead-lg text-3xl text-secondary text-center pt-4 pb-6">
+            <h2 className="figma-title search-question">
               {step.question}
             </h2>
 
-            <div className="flex flex-col gap-3 overflow-y-auto pb-4">
-              {(step.options as Option<unknown>[]).map((opt) => (
+            <div className="figma-scroll search-options">
+              {(step.options as Option<unknown>[]).map((opt, i) => (
                 <button
                   key={String(opt.value)}
                   onClick={() => pick(opt.value)}
-                  className="flex items-center gap-4 p-4 bg-surface border-cup rounded-2xl shadow-cup-btn btn-press text-left"
+                  className={[
+                    'figma-button search-option text-surface',
+                    i % 3 === 0 ? 'bg-accent' : i % 3 === 1 ? 'bg-primary' : 'bg-secondary text-text',
+                  ].join(' ')}
                 >
-                  <span className="text-4xl flex-shrink-0">{opt.emoji}</span>
-                  <div>
-                    <span className="text-cuphead text-lg text-text block">{opt.label}</span>
-                    {opt.sub && <span className="text-xs text-muted">{opt.sub}</span>}
+                  <span className="flex-shrink-0 text-3xl">{opt.emoji}</span>
+                  <div className="min-w-0">
+                    <span className="block text-xl font-bold leading-tight">{opt.label}</span>
+                    {opt.sub && <span className="text-xs font-bold opacity-80">{opt.sub}</span>}
                   </div>
-                  <span className="ml-auto text-muted text-xl">›</span>
+                  <span className="ml-auto text-xl">›</span>
                 </button>
               ))}
             </div>
@@ -134,7 +137,7 @@ export function SearchWizard({ onComplete, defaultCategoryId }: Props) {
       {/* Retour */}
       {stepIdx > 0 && (
         <button
-          className="flex-shrink-0 text-muted text-sm font-semibold underline text-center py-4"
+          className="search-back-button"
           onClick={() => setStepIdx((i) => i - 1)}
         >
           ← Retour

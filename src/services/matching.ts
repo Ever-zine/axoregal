@@ -70,6 +70,16 @@ export async function joinRandomGroup(userId: string): Promise<MatchGroup | null
   return fetchGroupWithMembers(rows[0].group_id)
 }
 
+export async function leaveGroup(userId: string, groupId: string): Promise<void> {
+  const { error } = await supabase
+    .from('group_members')
+    .delete()
+    .eq('user_id', userId)
+    .eq('group_id', groupId)
+
+  if (error) throw error
+}
+
 function today() {
   return new Date().toISOString().split('T')[0]
 }
