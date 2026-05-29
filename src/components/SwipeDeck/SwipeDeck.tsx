@@ -43,7 +43,7 @@ export function SwipeDeck() {
         <h2 className="figma-title text-3xl">Tu es dans un groupe !</h2>
         <p className="text-lg font-semibold text-muted">«{myGroup.name}»</p>
         <button
-          className="figma-button bg-success px-8 text-lg text-text"
+          className="figma-button bg-success px-6 text-sm text-text"
           onClick={() => navigate('/chat')}
         >
           Aller au chat

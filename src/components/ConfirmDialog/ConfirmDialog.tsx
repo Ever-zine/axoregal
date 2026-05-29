@@ -45,13 +45,13 @@ export function ConfirmDialog({
 
             <div className="flex flex-col gap-3">
               <button
-                className="figma-button w-full bg-primary text-base font-bold text-white"
+                className="figma-button w-full bg-primary text-sm font-bold text-white"
                 onClick={onConfirm}
               >
                 {confirmLabel}
               </button>
               <button
-                className="figma-button w-full bg-bg text-base font-bold text-muted"
+                className="figma-button w-full bg-bg text-sm font-bold text-muted"
                 onClick={onCancel}
               >
                 {cancelLabel}
