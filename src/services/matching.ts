@@ -64,11 +64,41 @@ export async function createGroup(userId: string, name: string, categoryId: stri
 }
 
 export async function joinRandomGroup(userId: string): Promise<MatchGroup | null> {
-  const { data, error } = await supabase.rpc('join_random_group', { p_user_id: userId })
-  if (error) throw error
-  const rows = data as { group_id: string; category_id: string; group_name: string }[]
-  if (!rows || rows.length === 0) return null
-  return fetchGroupWithMembers(rows[0].group_id)
+  const dateStr = today()
+
+  const { data: groups, error: gErr } = await supabase
+    .from('groups')
+    .select('id')
+    .eq('session_date', dateStr)
+  if (gErr) throw gErr
+  if (!groups || groups.length === 0) return null
+
+  const groupIds = groups.map((g) => g.id)
+
+  const [swipesRes, membersRes] = await Promise.all([
+    supabase.from('swipes').select('group_id').eq('user_id', userId).in('group_id', groupIds),
+    supabase.from('group_members').select('group_id').eq('user_id', userId).in('group_id', groupIds),
+  ])
+
+  const excluded = new Set([
+    ...(swipesRes.data ?? []).map((r) => r.group_id),
+    ...(membersRes.data ?? []).map((r) => r.group_id),
+  ])
+
+  const available = groupIds.filter((id) => !excluded.has(id))
+  if (available.length === 0) return null
+
+  const groupId = available[Math.floor(Math.random() * available.length)]
+
+  await Promise.all([
+    supabase.from('swipes').upsert(
+      { user_id: userId, group_id: groupId, direction: 'right', session_date: dateStr },
+      { onConflict: 'user_id,group_id' },
+    ),
+    supabase.from('group_members').insert({ group_id: groupId, user_id: userId }),
+  ])
+
+  return fetchGroupWithMembers(groupId)
 }
 
 export async function leaveGroup(userId: string, groupId: string): Promise<void> {
