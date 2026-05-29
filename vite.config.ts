@@ -44,10 +44,10 @@ export default defineConfig({
       },
 
       workbox: {
-        // Page offline servie quand la navigation échoue sans réseau
+        // App shell pour les navigations SPA, y compris les deep links GitHub Pages.
         offlineGoogleAnalytics: false,
-        navigateFallback: `${base}offline.html`,
-        navigateFallbackDenylist: [/^\/auth/, /^\/api/],
+        navigateFallback: `${base}index.html`,
+        navigateFallbackDenylist: [/^\/api/],
 
         // PWA-03 : stratégies de cache runtime
         runtimeCaching: [
