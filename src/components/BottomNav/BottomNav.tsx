@@ -7,11 +7,12 @@ interface NavItem {
   icon: string
   path: string
   requiresGroup?: boolean
+  disabledIfGroup?: boolean
 }
 
 const ITEMS: NavItem[] = [
   { id: 'swipe',  label: 'Swipe', icon: '♨', path: '/swipe' },
-  { id: 'create', label: 'Créer', icon: '✚', path: '/create-group' },
+  { id: 'create', label: 'Créer', icon: '✚', path: '/create-group', disabledIfGroup: true },
   { id: 'chat',   label: 'Chat',  icon: '♨', path: '/chat', requiresGroup: true },
   { id: 'search', label: 'Resto', icon: '✦', path: '/search' },
 ]
@@ -24,7 +25,7 @@ export function BottomNav() {
   return (
     <nav className="figma-safe-bottom bottom-nav z-[100] mx-auto flex w-full max-w-[430px] flex-shrink-0 border-t-[3px] border-black bg-surface">
       {ITEMS.map((item) => {
-        const isDisabled = item.requiresGroup && !group
+        const isDisabled = (item.requiresGroup && !group) || (item.disabledIfGroup && !!group)
         const isActive = pathname.startsWith(item.path)
 
         return (

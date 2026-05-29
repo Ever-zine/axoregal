@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CATEGORIES } from '@/data/categories'
 import { createGroup } from '@/services/matching'
@@ -13,6 +13,8 @@ export function CreateGroupPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [trollPos, setTrollPos] = useState<{ top: string; left: string } | null>(null)
+  const [trollClicks, setTrollClicks] = useState(0)
 
   const canCreate = name.trim().length > 0 && selectedCategory !== null && !isSubmitting
 
@@ -28,6 +30,30 @@ export function CreateGroupPage() {
       setIsSubmitting(false)
     }
   }
+
+  const handleTroll = useCallback(() => {
+    setTrollClicks((c) => (c + 1) % 7)
+    // Zone sûre : entre 5% et 75% pour éviter les bords et la BottomNav
+    const top = `${Math.floor(Math.random() * 70) + 5}%`
+    const left = `${Math.floor(Math.random() * 65) + 5}%`
+    setTrollPos({ top, left })
+
+    // Après l'animation de déplacement, retour à l'origine
+    setTimeout(() => {
+      setTrollPos(null)
+    }, 350)
+  }, [])
+
+  const trollLabels = [
+    'Cliquez ici pour que la Direction vous offre ce repas 🎁',
+    'Cliquez ici pour le repas gratuit 👆',
+    'Presque… encore un clic 😏',
+    "C'est pour de vrai cette fois 🤞",
+    'Haha non. Toujours pas. 😈',
+    '…tu y crois encore ? 🫠',
+    'Respect pour la persévérance 👏',
+  ]
+  const trollLabel = trollLabels[Math.min(trollClicks, trollLabels.length - 1)]
 
   return (
     <PageTransition>
@@ -90,6 +116,31 @@ export function CreateGroupPage() {
           <p className="text-accent font-semibold text-sm text-center">{error}</p>
         )}
       </div>
+
+      {/* Bouton troll — flotte en position absolue sur tout l'écran */}
+        <button
+          onClick={handleTroll}
+          style={{
+            position: 'absolute',
+            top: trollPos ? trollPos.top : 'calc(100% - 180px)',
+            left: trollPos ? trollPos.left : '50%',
+            transform: 'translateX(-50%)',
+            transition: 'top 0.25s cubic-bezier(.4,1.6,.6,1), left 0.25s cubic-bezier(.4,1.6,.6,1)',
+            zIndex: 50,
+            background: '#fff7ed',
+            border: '1.5px dashed #f97316',
+            borderRadius: '12px',
+            padding: '10px 16px',
+            fontSize: '13px',
+            fontWeight: 500,
+            color: '#c2410c',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 2px 8px rgba(249,115,22,0.15)',
+          }}
+        >
+          {trollLabel}
+        </button>
 
       <div className="create-group-footer">
         <button
