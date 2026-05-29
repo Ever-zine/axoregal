@@ -11,6 +11,7 @@ import { SurprisePage } from '@/pages/SurprisePage'
 import { CreateGroupPage } from '@/pages/CreateGroupPage'
 import { ChatPage } from '@/pages/ChatPage'
 import { SearchPage } from '@/pages/SearchPage'
+import { HistoryPage } from '@/pages/HistoryPage'
 import { InstallBanner } from '@/components/InstallBanner/InstallBanner'
 
 export function App() {
@@ -39,6 +40,7 @@ export function App() {
           <Route path="/create-group"   element={<ProtectedRoute><CreateGroupPage /></ProtectedRoute>} />
           <Route path="/chat"           element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/search"         element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+          <Route path="/history"        element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
           <Route
             path="/"
             element={isAuthenticated ? <Navigate to="/splash" replace /> : <Navigate to="/login" replace />}
