@@ -39,34 +39,15 @@ CREATE OR REPLACE TRIGGER on_auth_user_upsert
   AFTER INSERT OR UPDATE ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.sync_profile();
 
--- Swipes journaliers
-CREATE TABLE IF NOT EXISTS public.swipes (
-  id           UUID    DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id      UUID    REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  category_id  TEXT    NOT NULL,
-  direction    TEXT    CHECK (direction IN ('left', 'right')) NOT NULL,
-  swiped_at    TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  session_date DATE    DEFAULT CURRENT_DATE NOT NULL,
-  UNIQUE (user_id, category_id, session_date)
-);
-
-ALTER TABLE public.swipes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Swipes visibles par tous les connectés"
-  ON public.swipes FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Chaque utilisateur gère ses swipes"
-  ON public.swipes FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Chaque utilisateur modifie ses swipes"
-  ON public.swipes FOR UPDATE TO authenticated USING (auth.uid() = user_id);
-
-ALTER PUBLICATION supabase_realtime ADD TABLE public.swipes;
-
 -- ============================================================
--- Groupes formés par matching
+-- Groupes créés par les utilisateurs
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.groups (
   id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name         TEXT NOT NULL,
   category_id  TEXT NOT NULL,
+  created_by   UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   session_date DATE DEFAULT CURRENT_DATE NOT NULL
 );
@@ -74,6 +55,9 @@ CREATE TABLE IF NOT EXISTS public.groups (
 ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Groupes visibles par tous les connectés"
   ON public.groups FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Utilisateur crée un groupe"
+  ON public.groups FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = created_by);
 
 CREATE TABLE IF NOT EXISTS public.group_members (
   id        UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -86,61 +70,30 @@ CREATE TABLE IF NOT EXISTS public.group_members (
 ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Membres visibles par tous les connectés"
   ON public.group_members FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Système insère les membres"
-  ON public.group_members FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Utilisateur rejoint un groupe"
+  ON public.group_members FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
 
 ALTER PUBLICATION supabase_realtime ADD TABLE public.group_members;
 
--- ============================================================
--- Trigger de matching : crée/met à jour un groupe dès que
--- ≥2 utilisateurs ont swipé droite sur la même catégorie
--- ============================================================
+-- Swipes journaliers (par groupe, pour ne pas re-proposer les groupes déjà vus)
+CREATE TABLE IF NOT EXISTS public.swipes (
+  id           UUID    DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id      UUID    REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  group_id     UUID    REFERENCES public.groups(id) ON DELETE CASCADE NOT NULL,
+  direction    TEXT    CHECK (direction IN ('left', 'right')) NOT NULL,
+  swiped_at    TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  session_date DATE    DEFAULT CURRENT_DATE NOT NULL,
+  UNIQUE (user_id, group_id)
+);
 
-CREATE OR REPLACE FUNCTION public.check_and_create_match()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
-DECLARE
-  v_group_id  UUID;
-  v_user_ids  UUID[];
-BEGIN
-  IF NEW.direction != 'right' THEN
-    RETURN NEW;
-  END IF;
-
-  SELECT ARRAY_AGG(user_id) INTO v_user_ids
-  FROM public.swipes
-  WHERE category_id   = NEW.category_id
-    AND direction     = 'right'
-    AND session_date  = NEW.session_date;
-
-  IF array_length(v_user_ids, 1) < 2 THEN
-    RETURN NEW;
-  END IF;
-
-  -- Réutilise le groupe du jour s'il existe déjà pour cette catégorie
-  SELECT id INTO v_group_id
-  FROM public.groups
-  WHERE category_id  = NEW.category_id
-    AND session_date = NEW.session_date
-  LIMIT 1;
-
-  IF v_group_id IS NULL THEN
-    INSERT INTO public.groups (category_id, session_date)
-    VALUES (NEW.category_id, NEW.session_date)
-    RETURNING id INTO v_group_id;
-  END IF;
-
-  -- Ajoute tous les swipeurs droite au groupe (idempotent)
-  INSERT INTO public.group_members (group_id, user_id)
-  SELECT v_group_id, u FROM UNNEST(v_user_ids) AS u
-  ON CONFLICT (group_id, user_id) DO NOTHING;
-
-  RETURN NEW;
-END;
-$$;
-
-CREATE OR REPLACE TRIGGER on_swipe_match
-  AFTER INSERT OR UPDATE ON public.swipes
-  FOR EACH ROW EXECUTE FUNCTION public.check_and_create_match();
+ALTER TABLE public.swipes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Swipes visibles par tous les connectés"
+  ON public.swipes FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Chaque utilisateur gère ses swipes"
+  ON public.swipes FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Chaque utilisateur modifie ses swipes"
+  ON public.swipes FOR UPDATE TO authenticated USING (auth.uid() = user_id);
 
 -- ============================================================
 -- Messages de chat
@@ -176,20 +129,51 @@ CREATE POLICY "Membres peuvent envoyer des messages"
 ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
 
 -- ============================================================
+-- RPC : créer un groupe (créateur auto-rejoint, SECURITY DEFINER
+-- pour garantir l'atomicité group + member)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.create_group(
+  p_user_id  UUID,
+  p_name     TEXT,
+  p_category TEXT
+)
+RETURNS TABLE(group_id UUID) LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_group_id UUID;
+BEGIN
+  INSERT INTO public.groups (name, category_id, created_by, session_date)
+  VALUES (p_name, p_category, p_user_id, CURRENT_DATE)
+  RETURNING id INTO v_group_id;
+
+  INSERT INTO public.group_members (group_id, user_id)
+  VALUES (v_group_id, p_user_id);
+
+  RETURN QUERY SELECT v_group_id;
+END;
+$$;
+
+-- ============================================================
 -- RPC : rejoindre un groupe aléatoire (Surprends-moi)
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.join_random_group(p_user_id UUID)
-RETURNS TABLE(group_id UUID, category_id TEXT) LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS TABLE(group_id UUID, category_id TEXT, group_name TEXT)
+LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   v_group_id    UUID;
   v_category_id TEXT;
-  v_categories  TEXT[] := ARRAY['burger','sushi','pizza','tacos','ramen','salade','poulet','steak'];
+  v_name        TEXT;
 BEGIN
-  -- 1. Cherche un groupe du jour auquel l'utilisateur n'appartient pas encore
-  SELECT g.id, g.category_id INTO v_group_id, v_category_id
+  -- Cherche un groupe du jour que l'utilisateur n'a pas encore swipé ni rejoint
+  SELECT g.id, g.category_id, g.name
+  INTO v_group_id, v_category_id, v_name
   FROM public.groups g
   WHERE g.session_date = CURRENT_DATE
+    AND NOT EXISTS (
+      SELECT 1 FROM public.swipes s
+      WHERE s.group_id = g.id AND s.user_id = p_user_id
+    )
     AND NOT EXISTS (
       SELECT 1 FROM public.group_members gm
       WHERE gm.group_id = g.id AND gm.user_id = p_user_id
@@ -197,19 +181,19 @@ BEGIN
   ORDER BY RANDOM()
   LIMIT 1;
 
-  -- 2. Si aucun groupe dispo, crée-en un avec une catégorie aléatoire
+  -- Aucun groupe dispo → retourne vide
   IF v_group_id IS NULL THEN
-    v_category_id := v_categories[1 + floor(random() * array_length(v_categories, 1))::int];
-    INSERT INTO public.groups (category_id, session_date)
-    VALUES (v_category_id, CURRENT_DATE)
-    RETURNING id INTO v_group_id;
+    RETURN;
   END IF;
 
-  -- 3. Ajoute l'utilisateur
+  INSERT INTO public.swipes (user_id, group_id, direction, session_date)
+  VALUES (p_user_id, v_group_id, 'right', CURRENT_DATE)
+  ON CONFLICT (user_id, group_id) DO NOTHING;
+
   INSERT INTO public.group_members (group_id, user_id)
   VALUES (v_group_id, p_user_id)
   ON CONFLICT (group_id, user_id) DO NOTHING;
 
-  RETURN QUERY SELECT v_group_id, v_category_id;
+  RETURN QUERY SELECT v_group_id, v_category_id, v_name;
 END;
 $$;

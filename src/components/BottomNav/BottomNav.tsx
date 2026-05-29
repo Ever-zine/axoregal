@@ -10,10 +10,10 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
-  { id: 'swipe',    label: 'Swipe',    icon: '🔥', path: '/swipe' },
-  { id: 'surprise', label: 'Surprends', icon: '🎲', path: '/surprise' },
-  { id: 'chat',     label: 'Chat',     icon: '💬', path: '/chat', requiresGroup: true },
-  { id: 'search',   label: 'Resto',    icon: '🗺️', path: '/search' },
+  { id: 'swipe',  label: 'Swipe',  icon: '🔥', path: '/swipe' },
+  { id: 'create', label: 'Créer',  icon: '✚',  path: '/create-group' },
+  { id: 'chat',   label: 'Chat',   icon: '💬', path: '/chat', requiresGroup: true },
+  { id: 'search', label: 'Resto',  icon: '🗺️', path: '/search' },
 ]
 
 export function BottomNav() {

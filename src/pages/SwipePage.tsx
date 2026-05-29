@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/providers/AuthProvider'
 import { useGroup } from '@/providers/GroupProvider'
@@ -12,10 +11,6 @@ export function SwipePage() {
   const navigate = useNavigate()
   const { group } = useGroup()
   const { isOpen, startLabel, endLabel } = useMatchWindow()
-
-  useEffect(() => {
-    if (group) navigate(`/match/${group.id}`)
-  }, [group, navigate])
 
   return (
     <PageTransition>
@@ -48,6 +43,18 @@ export function SwipePage() {
       )}
 
       <SwipeDeck />
+
+      {!group && (
+        <div className="flex-shrink-0 px-5 pb-3">
+          <button
+            className="w-full bg-surface border-cup rounded-2xl shadow-cup-btn btn-press font-display text-sm text-secondary uppercase py-3"
+            onClick={() => navigate('/surprise')}
+          >
+            🎲 Surprends-moi
+          </button>
+        </div>
+      )}
+
       <BottomNav />
     </div>
     </PageTransition>

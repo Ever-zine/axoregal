@@ -1,12 +1,12 @@
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'framer-motion'
 import type { Category } from '@/data/categories'
-import type { SwipeMember } from '@/hooks/useSwipes'
+import type { AvailableGroup } from '@/hooks/useSwipes'
 import { FoodCharacter } from '@/components/FoodCharacter/FoodCharacter'
 import { MemberAvatars } from '@/components/MemberAvatars/MemberAvatars'
 
 interface Props {
+  group: AvailableGroup
   category: Category
-  members: SwipeMember[]
   onSwipe: (direction: 'left' | 'right') => void
   isTop: boolean
 }
@@ -14,7 +14,7 @@ interface Props {
 const SWIPE_THRESHOLD = 80
 const FLY_DISTANCE = 600
 
-export function SwipeCard({ category, members, onSwipe, isTop }: Props) {
+export function SwipeCard({ group, category, onSwipe, isTop }: Props) {
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 200], [-20, 20])
   const likeOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
@@ -66,9 +66,14 @@ export function SwipeCard({ category, members, onSwipe, isTop }: Props) {
         NOPE
       </motion.div>
 
-      <span className="text-cuphead text-4xl text-text [text-shadow:3px_3px_0_#000] z-10">
-        {category.name}
-      </span>
+      <div className="flex flex-col items-center gap-1 z-10">
+        <span className="text-cuphead text-4xl text-text [text-shadow:3px_3px_0_#000] text-center">
+          {group.name}
+        </span>
+        <span className="text-sm text-muted font-semibold">
+          {category.emoji} {category.name}
+        </span>
+      </div>
 
       <div className="flex-1 flex items-center justify-center py-4">
         <FoodCharacter category={category} />
@@ -76,9 +81,9 @@ export function SwipeCard({ category, members, onSwipe, isTop }: Props) {
 
       <div className="flex flex-col items-center gap-3 w-full z-10">
         <span className="text-xs text-muted font-bold uppercase tracking-wider">
-          {members.length} collègue{members.length !== 1 ? 's' : ''} intéressé{members.length !== 1 ? 's' : ''}
+          {group.members.length} membre{group.members.length !== 1 ? 's' : ''} déjà partant{group.members.length !== 1 ? 's' : ''}
         </span>
-        <MemberAvatars members={members} />
+        <MemberAvatars members={group.members} />
 
         {isTop && (
           <div className="flex gap-6 mt-4">
