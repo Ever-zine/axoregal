@@ -7,6 +7,8 @@ import { useGroup } from '@/providers/GroupProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
 import { ConfirmDialog } from '@/components/ConfirmDialog/ConfirmDialog'
+import soundGood from '@/assets/Wouhou.m4a'
+import soundNul from '@/assets/Pinpin.m4a'
 
 export function SwipeDeck() {
   const { user } = useAuth()
@@ -68,12 +70,22 @@ export function SwipeDeck() {
 
   const queue = availableGroups.filter((g) => !localSwiped.includes(g.id))
   const topGroup = queue[0]
-  const nextGroup = queue[1]
 
   function handleSwipe(groupId: string, direction: 'left' | 'right') {
     setLocalSwiped((prev) => [...prev, groupId])
     recordSwipe({ groupId, direction })
-    if (direction === 'right' && user) joinGroup(groupId)
+    if (direction === 'right' && user) 
+    {
+      joinGroup(groupId)
+      const audio = new Audio(soundGood)
+      audio.play()
+      navigate(/match/ + groupId)
+    }
+    else
+    {
+      const audio = new Audio(soundNul)
+      audio.play()
+    }
   }
 
   if (isLoading) {
@@ -104,12 +116,6 @@ export function SwipeDeck() {
     <div className="figma-main swipe-deck figma-scroll">
       <div className="swipe-deck-inner">
         <div className="swipe-card-stage">
-          {nextGroup && (
-            <div className="absolute inset-0 scale-[0.94] translate-y-3">
-              <GroupCard group={nextGroup} onSwipe={() => {}} isTop={false} />
-            </div>
-          )}
-
           <AnimatePresence>
             <motion.div
               key={topGroup.id}

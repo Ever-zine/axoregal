@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CATEGORIES } from '@/data/categories'
@@ -9,6 +9,7 @@ import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { LoadingPage } from './LoadingPage'
 import { ConfirmDialog } from '@/components/ConfirmDialog/ConfirmDialog'
 import './MatchPage.scss'
+import soundMatch from '@/assets/Match.m4a'
 
 const EMOJIS = ['⭐', '✨', '🎉', '💥', '🌟', '🎊', '⚡', '🔥', '💫', '🎈', '🏆', '❤️']
 
@@ -35,6 +36,19 @@ function Sparkles() {
     </>
   )
 }
+
+const audioRef = useRef<HTMLAudioElement | null>(null)
+
+useEffect(() => {
+  const audio = new Audio(soundMatch)
+  audioRef.current = audio
+  audio.play()
+
+  return () => {
+    audio.pause()
+    audio.currentTime = 0
+  }
+}, [])
 
 export function MatchPage() {
   const { groupId } = useParams<{ groupId: string }>()
