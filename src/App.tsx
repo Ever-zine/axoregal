@@ -8,6 +8,7 @@ import { SwipePage } from '@/pages/SwipePage'
 import { MatchPage } from '@/pages/MatchPage'
 import { SurprisePage } from '@/pages/SurprisePage'
 import { ChatPage } from '@/pages/ChatPage'
+import { SearchPage } from '@/pages/SearchPage'
 
 export function App() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -26,8 +27,7 @@ export function App() {
       <Route path="/match/:groupId" element={<ProtectedRoute><MatchPage /></ProtectedRoute>} />
       <Route path="/surprise"       element={<ProtectedRoute><SurprisePage /></ProtectedRoute>} />
       <Route path="/chat"           element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-      {/* Placeholder Epic 5 */}
-      <Route path="/search"         element={<ProtectedRoute><SwipePage /></ProtectedRoute>} />
+      <Route path="/search"         element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
       <Route
         path="/"
         element={isAuthenticated ? <Navigate to="/splash" replace /> : <Navigate to="/login" replace />}
