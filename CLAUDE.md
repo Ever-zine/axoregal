@@ -39,6 +39,14 @@ Le profil utilisateur (nom, avatar) vient de `user.user_metadata` — les clés 
 
 Supabase SAML SSO requiert le plan **Team ou Enterprise**. Pour les tests en dev, utiliser un provider OAuth (Google, GitHub) configuré dans le dashboard Supabase.
 
+## Schéma Supabase
+
+Le schéma est dans `supabase/schema.sql`. Tables principales :
+- `profiles` — miroir de `auth.users`, peuplé automatiquement par le trigger `sync_profile` à chaque connexion SSO.
+- `swipes` — swipes journaliers par utilisateur et catégorie. Contrainte `UNIQUE (user_id, category_id, session_date)` pour éviter les doublons.
+
+Le Realtime est activé sur `swipes` pour mettre à jour les avatars en temps réel sur les cartes.
+
 ## Logique de matching
 
 Fenêtre temporelle configurable (`VITE_MATCH_WINDOW_START` / `VITE_MATCH_WINDOW_END`). La détection de match se fait via **Supabase Realtime** sur la table `matches` — pas de polling. Un match est créé côté backend (Edge Function ou trigger PostgreSQL) quand ≥2 utilisateurs ont swipé la même catégorie dans la fenêtre.
