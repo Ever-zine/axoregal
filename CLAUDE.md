@@ -11,50 +11,57 @@ Voir `doc/overview.md` pour le concept complet et les questions ouvertes, `doc/s
 ## Commandes
 
 ```bash
-npm run dev        # Serveur de développement Vite (HMR)
-npm run build      # Build de production (génère dist/ + PWA assets)
-npm run preview    # Prévisualise le build de production localement
-npm run lint       # ESLint
-npm run test       # Vitest (mode watch)
-npm run test:run   # Vitest (run once, CI)
+pnpm dev        # Serveur de développement Vite (HMR)
+pnpm build      # Build de production (génère dist/ + PWA assets)
+pnpm preview    # Prévisualise le build de production localement
+pnpm lint       # ESLint
+pnpm test       # Vitest (mode watch)
+pnpm test:run   # Vitest (run once, CI)
 ```
 
 ## Stack & Architecture
 
-- **React 18 + Vite** — pas de Next.js, pas de SSR. Application SPA pure.
+- **React 18 + Vite** — SPA pure, pas de SSR.
+- **Supabase** (`src/lib/supabase.ts`) — client singleton utilisé partout. Couvre l'auth, la base de données (PostgreSQL), le Realtime (WebSocket managé pour le chat et les matchs) et le storage.
 - **vite-plugin-pwa** — génère le service worker Workbox et le manifest. Config dans `vite.config.ts`.
-- **React Router v6** — routing côté client. Les routes sont déclarées dans `src/main.tsx`.
-- **TanStack Query** — toutes les requêtes API passent par des hooks `useQuery`/`useMutation`, jamais de `fetch` direct dans les composants.
+- **React Router v6** — routes déclarées dans `src/App.tsx`.
+- **TanStack Query** — requêtes ponctuelles (restaurants, profils). Le Realtime Supabase remplace le polling pour les matchs et le chat — ne pas utiliser TanStack Query pour ces deux features.
 - **Framer Motion** — animations de swipe, transitions de page, écran "It's a match". Ne pas mélanger avec des animations CSS ad hoc sur les mêmes éléments.
-- **CSS Modules** — un fichier `.module.css` par composant. Les tokens de design (couleurs, typo, border-radius CupHead) sont centralisés dans `src/design/tokens.css` et consommés via variables CSS.
+- **CSS Modules** — un `.module.css` par composant. Tokens de design CupHead centralisés dans `src/design/tokens.css`, consommés via variables CSS. Ne jamais hardcoder de couleurs dans les composants.
 
-## Auth SSO
+## Auth Supabase SSO
 
-Le flow est OpenID Connect. Après redirect et callback, le token JWT est stocké dans `sessionStorage` (jamais `localStorage` — risque XSS). Toutes les requêtes API partent avec `Authorization: Bearer <token>`. Le hook `useAuth` (`src/hooks/useAuth.ts`) expose `user`, `isAuthenticated` et `logout`.
+Flow : `supabase.auth.signInWithSSO({ domain })` → redirect IdP → callback `/auth/callback` → `supabase.auth.exchangeCodeForSession()`.
+
+Supabase gère le token et son refresh automatiquement. L'état de session est exposé via `AuthProvider` (`src/providers/AuthProvider.tsx`) qui écoute `supabase.auth.onAuthStateChange`. Le hook `useAuth()` expose `user`, `isAuthenticated`, `isLoading`, `login`, `logout`.
+
+Le profil utilisateur (nom, avatar) vient de `user.user_metadata` — les clés varient selon le provider SSO (`full_name`, `name`, `avatar_url`, `picture`). La normalisation est dans `toAuthUser()` dans `AuthProvider.tsx`.
+
+Supabase SAML SSO requiert le plan **Team ou Enterprise**. Pour les tests en dev, utiliser un provider OAuth (Google, GitHub) configuré dans le dashboard Supabase.
 
 ## Logique de matching
 
-Le matching fonctionne sur une **fenêtre temporelle configurable** (variable d'env `VITE_MATCH_WINDOW_START` / `VITE_MATCH_WINDOW_END`). Pendant cette fenêtre, le client poll `/api/match/status` toutes les 10 secondes via TanStack Query. Un match est déclenché côté serveur quand ≥2 utilisateurs ont swipé à droite la même catégorie. En dehors de la fenêtre, le swipe est possible mais aucun match n'est déclenché.
+Fenêtre temporelle configurable (`VITE_MATCH_WINDOW_START` / `VITE_MATCH_WINDOW_END`). La détection de match se fait via **Supabase Realtime** sur la table `matches` — pas de polling. Un match est créé côté backend (Edge Function ou trigger PostgreSQL) quand ≥2 utilisateurs ont swipé la même catégorie dans la fenêtre.
+
+## Chat
+
+Implémenté via **Supabase Realtime channels** (`supabase.channel('chat:group_id')`), pas de WebSocket custom ni Socket.io.
 
 ## Personnages animés
 
-Les sprites des catégories (burger, sushi, pizza…) sont des **spritesheets CSS** dans `src/assets/characters/`. L'animation frame-by-frame est pilotée par `@keyframes` avec `steps()`. Les animations de transition (chargement, match) utilisent des fichiers **Lottie JSON** lus via `lottie-react`.
+Spritesheets CSS dans `src/assets/characters/` — animation frame-by-frame via `@keyframes` + `steps()` (style CupHead authentique). Lottie (`lottie-react`) uniquement pour les animations de transition (chargement, match).
 
 ## Variables d'environnement
 
 ```
-VITE_API_BASE_URL          URL de l'API backend
-VITE_SSO_CLIENT_ID         Client ID OpenID Connect
-VITE_SSO_AUTHORITY         URL de l'IdP (ex: https://login.entreprise.com)
+VITE_SUPABASE_URL          URL du projet Supabase
+VITE_SUPABASE_ANON_KEY     Clé publique anon Supabase
+VITE_SSO_DOMAIN            Domaine entreprise pour SAML SSO (ex: entreprise.com)
 VITE_MATCH_WINDOW_START    Heure début matching (ex: "11:00")
 VITE_MATCH_WINDOW_END      Heure fin matching  (ex: "11:45")
 ```
 
 Copier `.env.example` en `.env.local` pour le développement local.
-
-## Contraintes de design
-
-Le style est **CupHead** : couleurs saturées, contours noirs épais (2–3px), typographie rétro, animations saccadées (pas de courbes ease fluides). Tout écart doit être délibéré. Les tokens visuels sont dans `src/design/tokens.css` — ne pas hardcoder de couleurs dans les composants.
 
 ## PWA
 
