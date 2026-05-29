@@ -230,6 +230,26 @@ END;
 $$;
 
 -- ============================================================
+-- Trigger : suppression automatique du groupe vide
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.delete_empty_group()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  DELETE FROM public.groups
+  WHERE id = OLD.group_id
+    AND NOT EXISTS (
+      SELECT 1 FROM public.group_members WHERE group_id = OLD.group_id
+    );
+  RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER on_group_member_delete
+  AFTER DELETE ON public.group_members
+  FOR EACH ROW EXECUTE FUNCTION public.delete_empty_group();
+
+-- ============================================================
 -- Contests (Alpha Contest)
 -- ============================================================
 
