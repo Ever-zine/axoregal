@@ -44,18 +44,18 @@ export function RestaurantCard({ restaurant: r }: Props) {
       {/* Carte compacte */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-4 p-4 bg-surface border-cup rounded-2xl shadow-cup-btn btn-press text-left"
+        className="figma-button restaurant-card bg-surface"
       >
-        <span className="text-4xl flex-shrink-0">{r.emoji}</span>
-        <div className="flex-1 min-w-0">
-          <span className="text-cuphead text-base text-text block truncate">{r.name}</span>
-          <div className="flex items-center gap-3 mt-1 flex-wrap">
+        <span className="restaurant-card-emoji">{r.emoji}</span>
+        <div className="restaurant-card-body">
+          <span className="figma-title restaurant-card-title">{r.name}</span>
+          <div className="restaurant-card-meta">
             <StarRating rating={r.rating} />
             <span className="text-xs text-muted">🚶 {walkMinutes(r.distanceMeters)} min</span>
             <span className="text-xs text-muted">{PRICE_ICONS[r.price]}</span>
           </div>
         </div>
-        <span className="text-muted text-xl flex-shrink-0">›</span>
+        <span className="restaurant-card-arrow">›</span>
       </button>
 
       {/* Bottom sheet détail (REST-06) */}
@@ -73,7 +73,7 @@ export function RestaurantCard({ restaurant: r }: Props) {
 
             {/* Sheet */}
             <motion.div
-              className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-surface border-t-[4px] border-x-[4px] border-black rounded-t-3xl z-[201] pb-8"
+              className="restaurant-sheet"
               initial={{ y: '100%' }}
               animate={{ y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } }}
               exit={{ y: '100%', transition: { duration: 0.2 } }}
@@ -83,22 +83,22 @@ export function RestaurantCard({ restaurant: r }: Props) {
               onDragEnd={(_, info) => { if (info.offset.y > 80) setOpen(false) }}
             >
               {/* Handle */}
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-12 h-1.5 bg-muted rounded-full" />
+              <div className="flex justify-center pb-2 pt-3">
+                <div className="h-1.5 w-12 rounded-full bg-muted" />
               </div>
 
-              <div className="px-6 flex flex-col gap-5">
+              <div className="restaurant-sheet-content">
                 {/* En-tête */}
-                <div className="flex items-start gap-4">
-                  <span className="text-6xl">{r.emoji}</span>
+                <div className="restaurant-sheet-header">
+                  <span className="restaurant-sheet-emoji">{r.emoji}</span>
                   <div>
-                    <h3 className="text-cuphead text-xl text-text">{r.name}</h3>
+                    <h3 className="figma-title restaurant-sheet-title">{r.name}</h3>
                     <StarRating rating={r.rating} />
                   </div>
                 </div>
 
                 {/* Infos */}
-                <div className="flex flex-col gap-3">
+                <div className="restaurant-sheet-info">
                   <Row icon="📍" text={r.address} />
                   <Row icon="⏰" text={r.hours} />
                   <Row icon="🚶" text={`${distanceLabel(r.distanceMeters)} — ${walkMinutes(r.distanceMeters)} min à pied`} />
@@ -107,12 +107,12 @@ export function RestaurantCard({ restaurant: r }: Props) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col gap-3">
+                <div className="restaurant-sheet-actions">
                   <a
                     href={mapsUrl(r)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 py-3 bg-primary border-cup rounded-2xl shadow-cup-btn btn-press text-text font-display uppercase tracking-wider"
+                    className="figma-button restaurant-sheet-action bg-primary text-surface"
                   >
                     🗺️ Voir sur Maps
                   </a>
@@ -121,8 +121,8 @@ export function RestaurantCard({ restaurant: r }: Props) {
                     <button
                       onClick={handleShare}
                       className={[
-                        'flex items-center justify-center gap-2 py-3 border-cup rounded-2xl shadow-cup-btn btn-press font-display uppercase tracking-wider',
-                        shared ? 'bg-success text-black' : 'bg-bg text-text',
+                        'figma-button restaurant-sheet-action',
+                        shared ? 'bg-success text-text' : 'bg-bg text-text',
                       ].join(' ')}
                     >
                       {shared ? '✅ Partagé !' : '💬 Partager au groupe'}
@@ -140,8 +140,8 @@ export function RestaurantCard({ restaurant: r }: Props) {
 
 function Row({ icon, text }: { icon: string; text: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="text-lg flex-shrink-0 mt-0.5">{icon}</span>
+    <div className="restaurant-info-row">
+      <span className="mt-0.5 flex-shrink-0 text-lg">{icon}</span>
       <span className="text-sm text-text leading-relaxed">{text}</span>
     </div>
   )

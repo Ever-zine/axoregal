@@ -12,7 +12,6 @@ export function SwipeDeck() {
 
   const queue = remaining.filter((c) => !localSwiped.includes(c.id))
   const topCategory = queue[0]
-  const nextCategory = queue[1]
 
   function handleSwipe(categoryId: string, direction: 'left' | 'right') {
     setLocalSwiped((prev) => [...prev, categoryId])
@@ -21,24 +20,18 @@ export function SwipeDeck() {
 
   if (!topCategory) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center px-8">
-        <span className="text-[80px] animate-whirl">🎉</span>
-        <h2 className="text-cuphead-lg text-3xl text-secondary">Tout swipé !</h2>
-        <p className="text-muted font-semibold">Reviens demain pour de nouveaux choix.</p>
+      <div className="figma-main swipe-empty">
+        <span className="text-[80px] animate-whirl">✦</span>
+        <h2 className="figma-title text-4xl">Tout swipé !</h2>
+        <p className="font-semibold text-muted">Reviens demain pour de nouveaux choix.</p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 pb-2">
-      <div className="relative w-full max-w-[360px] h-full">
-        {/* Carte du dessous */}
-        {nextCategory && (
-          <div className="absolute inset-0 scale-[0.94] translate-y-3">
-            <CardWithMembers category={nextCategory} onSwipe={() => {}} isTop={false} />
-          </div>
-        )}
-
+    <div className="figma-main swipe-deck figma-scroll">
+      <div className="swipe-deck-inner">
+      <div className="swipe-card-stage">
         {/* Carte du dessus */}
         <AnimatePresence>
           <motion.div
@@ -56,6 +49,7 @@ export function SwipeDeck() {
             />
           </motion.div>
         </AnimatePresence>
+      </div>
       </div>
     </div>
   )

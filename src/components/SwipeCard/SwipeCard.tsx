@@ -1,8 +1,8 @@
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'framer-motion'
 import type { Category } from '@/data/categories'
 import type { SwipeMember } from '@/hooks/useSwipes'
-import { FoodCharacter } from '@/components/FoodCharacter/FoodCharacter'
 import { MemberAvatars } from '@/components/MemberAvatars/MemberAvatars'
+import mascot from '@/assets/figma-mascot-small.png'
 
 interface Props {
   category: Category
@@ -40,19 +40,19 @@ export function SwipeCard({ category, members, onSwipe, isTop }: Props) {
 
   return (
     <motion.div
-      className="absolute inset-0 rounded-3xl border-cup-xl shadow-cup-card flex flex-col items-center justify-between p-8 pb-6 overflow-hidden touch-none"
-      style={{ x, rotate, backgroundColor: category.bgColor, cursor: isTop ? 'grab' : 'default' }}
+      className="swipe-card-shell"
+      style={{ x, rotate, cursor: isTop ? 'grab' : 'default' }}
       drag={isTop ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
       onDragEnd={handleDragEnd}
     >
       {/* Overlay directionnel */}
-      <motion.div className="absolute inset-0 rounded-[22px] pointer-events-none z-10" style={{ backgroundColor: overlayBg }} />
+      <motion.div className="pointer-events-none absolute inset-0 z-10 rounded-[22px]" style={{ backgroundColor: overlayBg }} />
 
       {/* Badge LIKE */}
       <motion.div
-        className="absolute top-6 left-6 font-display text-3xl text-success border-[3px] border-success px-3 py-1 rounded-lg rotate-[-15deg] z-20 pointer-events-none"
+        className="pointer-events-none absolute left-6 top-6 z-20 rotate-[-15deg] rounded-lg border-[3px] border-accent px-3 py-1 font-display text-3xl text-accent"
         style={{ opacity: likeOpacity }}
       >
         LIKE
@@ -60,45 +60,47 @@ export function SwipeCard({ category, members, onSwipe, isTop }: Props) {
 
       {/* Badge NOPE */}
       <motion.div
-        className="absolute top-6 right-6 font-display text-3xl text-accent border-[3px] border-accent px-3 py-1 rounded-lg rotate-[15deg] z-20 pointer-events-none"
+        className="pointer-events-none absolute right-6 top-6 z-20 rotate-[15deg] rounded-lg border-[3px] border-primary px-3 py-1 font-display text-3xl text-primary"
         style={{ opacity: nopeOpacity }}
       >
         NOPE
       </motion.div>
 
-      <span className="text-cuphead text-4xl text-text [text-shadow:3px_3px_0_#000] z-10">
-        {category.name}
-      </span>
-
-      <div className="flex-1 flex items-center justify-center py-4">
-        <FoodCharacter category={category} />
-      </div>
-
-      <div className="flex flex-col items-center gap-3 w-full z-10">
-        <span className="text-xs text-muted font-bold uppercase tracking-wider">
-          {members.length} collègue{members.length !== 1 ? 's' : ''} intéressé{members.length !== 1 ? 's' : ''}
+      <div className="figma-card swipe-card">
+        <span className="figma-title swipe-card-title">
+          It’s {category.name} time
         </span>
-        <MemberAvatars members={members} />
 
-        {isTop && (
-          <div className="flex gap-6 mt-4">
-            <button
-              className="w-14 h-14 rounded-full border-cup bg-accent text-text text-2xl shadow-cup-btn btn-press flex items-center justify-center"
-              onClick={() => fly('left')}
-              aria-label="Refuser"
-            >
-              ✕
-            </button>
-            <button
-              className="w-14 h-14 rounded-full border-cup bg-success text-text text-2xl shadow-cup-btn btn-press flex items-center justify-center"
-              onClick={() => fly('right')}
-              aria-label="Accepter"
-            >
-              ✓
-            </button>
-          </div>
-        )}
+        <div className="swipe-mascot-wrap">
+          <img src={mascot} alt="" className="swipe-mascot" draggable={false} />
+        </div>
+
+        <div className="swipe-card-meta">
+          <MemberAvatars members={members} />
+          <span className="text-xs font-bold leading-snug text-muted">
+            {members.length} collègue{members.length !== 1 ? 's' : ''} intéressé{members.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
+
+      {isTop && (
+        <div className="swipe-actions">
+          <button
+            className="figma-button swipe-action bg-accent text-surface"
+            onClick={() => fly('right')}
+            aria-label="Accepter"
+          >
+            Qu’est-ce qu’on mange ?
+          </button>
+          <button
+            className="figma-button swipe-action bg-secondary text-text"
+            onClick={() => fly('left')}
+            aria-label="Passer"
+          >
+            Surprends-moi !
+          </button>
+        </div>
+      )}
     </motion.div>
   )
 }
