@@ -8,6 +8,7 @@ import { FoodCharacter } from '@/components/FoodCharacter/FoodCharacter'
 import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { LoadingPage } from './LoadingPage'
 import './MatchPage.scss'
+import soundMatch from '@/assets/Match.m4a'
 
 const EMOJIS = ['⭐', '✨', '🎉', '💥', '🌟', '🎊', '⚡', '🔥', '💫', '🎈', '🏆', '❤️']
 
@@ -36,6 +37,8 @@ function Sparkles() {
 }
 
 export function MatchPage() {
+  const audio = new Audio(soundMatch)
+      audio.play()
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
   const { leaveGroup } = useGroup()

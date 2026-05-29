@@ -6,6 +6,8 @@ import { useAvailableGroups, useRecordSwipe, useJoinGroup, type AvailableGroup }
 import { useGroup } from '@/providers/GroupProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
+import soundGood from '@/assets/Good.m4a'
+import soundNul from '@/assets/Pinpin.m4a'
 
 export function SwipeDeck() {
   const { user } = useAuth()
@@ -57,7 +59,17 @@ export function SwipeDeck() {
   function handleSwipe(groupId: string, direction: 'left' | 'right') {
     setLocalSwiped((prev) => [...prev, groupId])
     recordSwipe({ groupId, direction })
-    if (direction === 'right' && user) joinGroup(groupId)
+    if (direction === 'right' && user) 
+    {
+      joinGroup(groupId)
+      const audio = new Audio(soundGood)
+      audio.play()
+    }
+    else
+    {
+      const audio = new Audio(soundNul)
+      audio.play()
+    }
   }
 
   if (isLoading) {
