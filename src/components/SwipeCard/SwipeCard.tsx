@@ -3,7 +3,6 @@ import type { Category } from '@/data/categories'
 import type { SwipeMember } from '@/hooks/useSwipes'
 import { FoodCharacter } from '@/components/FoodCharacter/FoodCharacter'
 import { MemberAvatars } from '@/components/MemberAvatars/MemberAvatars'
-import styles from './SwipeCard.module.css'
 
 interface Props {
   category: Category
@@ -18,13 +17,9 @@ const FLY_DISTANCE = 600
 export function SwipeCard({ category, members, onSwipe, isTop }: Props) {
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 200], [-20, 20])
-
-  // Opacité des badges LIKE / NOPE
-  const likeOpacity  = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
-  const nopeOpacity  = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
-
-  // Overlay vert/rouge selon direction
-  const overlayColor = useTransform(
+  const likeOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
+  const nopeOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
+  const overlayBg   = useTransform(
     x,
     [-100, 0, 100],
     ['rgba(255,23,68,0.35)', 'rgba(0,0,0,0)', 'rgba(0,230,118,0.35)'],
@@ -32,67 +27,73 @@ export function SwipeCard({ category, members, onSwipe, isTop }: Props) {
 
   async function fly(direction: 'left' | 'right') {
     await animate(x, direction === 'right' ? FLY_DISTANCE : -FLY_DISTANCE, {
-      type: 'tween',
-      duration: 0.25,
-      ease: 'easeOut',
+      type: 'tween', duration: 0.25, ease: 'easeOut',
     })
     onSwipe(direction)
   }
 
   function handleDragEnd(_: unknown, info: PanInfo) {
-    if (info.offset.x > SWIPE_THRESHOLD || info.velocity.x > 500) {
-      fly('right')
-    } else if (info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -500) {
-      fly('left')
-    } else {
-      animate(x, 0, { type: 'spring', stiffness: 300, damping: 20 })
-    }
+    if (info.offset.x > SWIPE_THRESHOLD || info.velocity.x > 500) fly('right')
+    else if (info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -500) fly('left')
+    else animate(x, 0, { type: 'spring', stiffness: 300, damping: 20 })
   }
 
   return (
     <motion.div
-      className={styles.card}
-      style={{
-        x,
-        rotate,
-        backgroundColor: category.bgColor,
-        pointerEvents: isTop ? 'auto' : 'none',
-      }}
+      className="absolute inset-0 rounded-3xl border-cup-xl shadow-cup-card flex flex-col items-center justify-between p-8 pb-6 overflow-hidden touch-none"
+      style={{ x, rotate, backgroundColor: category.bgColor, cursor: isTop ? 'grab' : 'default' }}
       drag={isTop ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
       onDragEnd={handleDragEnd}
     >
-      {/* Overlay coloré */}
-      <motion.div className={styles.overlay} style={{ backgroundColor: overlayColor }} />
+      {/* Overlay directionnel */}
+      <motion.div className="absolute inset-0 rounded-[22px] pointer-events-none z-10" style={{ backgroundColor: overlayBg }} />
 
-      {/* Badges LIKE / NOPE */}
-      <motion.div className={`${styles.badge} ${styles.badgeLike}`} style={{ opacity: likeOpacity }}>
+      {/* Badge LIKE */}
+      <motion.div
+        className="absolute top-6 left-6 font-display text-3xl text-success border-[3px] border-success px-3 py-1 rounded-lg rotate-[-15deg] z-20 pointer-events-none"
+        style={{ opacity: likeOpacity }}
+      >
         LIKE
       </motion.div>
-      <motion.div className={`${styles.badge} ${styles.badgeNope}`} style={{ opacity: nopeOpacity }}>
+
+      {/* Badge NOPE */}
+      <motion.div
+        className="absolute top-6 right-6 font-display text-3xl text-accent border-[3px] border-accent px-3 py-1 rounded-lg rotate-[15deg] z-20 pointer-events-none"
+        style={{ opacity: nopeOpacity }}
+      >
         NOPE
       </motion.div>
 
-      <span className={styles.name}>{category.name}</span>
+      <span className="text-cuphead text-4xl text-text [text-shadow:3px_3px_0_#000] z-10">
+        {category.name}
+      </span>
 
-      <div className={styles.characterWrap}>
+      <div className="flex-1 flex items-center justify-center py-4">
         <FoodCharacter category={category} />
       </div>
 
-      <div className={styles.footer}>
-        <span className={styles.membersLabel}>
+      <div className="flex flex-col items-center gap-3 w-full z-10">
+        <span className="text-xs text-muted font-bold uppercase tracking-wider">
           {members.length} collègue{members.length !== 1 ? 's' : ''} intéressé{members.length !== 1 ? 's' : ''}
         </span>
         <MemberAvatars members={members} />
 
-        {/* Boutons desktop (SWIPE-06) */}
         {isTop && (
-          <div className={styles.buttons}>
-            <button className={`${styles.btn} ${styles.btnReject}`} onClick={() => fly('left')} aria-label="Refuser">
+          <div className="flex gap-6 mt-4">
+            <button
+              className="w-14 h-14 rounded-full border-cup bg-accent text-text text-2xl shadow-cup-btn btn-press flex items-center justify-center"
+              onClick={() => fly('left')}
+              aria-label="Refuser"
+            >
               ✕
             </button>
-            <button className={`${styles.btn} ${styles.btnAccept}`} onClick={() => fly('right')} aria-label="Accepter">
+            <button
+              className="w-14 h-14 rounded-full border-cup bg-success text-text text-2xl shadow-cup-btn btn-press flex items-center justify-center"
+              onClick={() => fly('right')}
+              aria-label="Accepter"
+            >
               ✓
             </button>
           </div>

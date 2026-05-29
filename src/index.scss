@@ -1,0 +1,96 @@
+@use './styles/animations';
+
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@400;600;700;800&display=swap');
+
+/* ── Tokens CupHead ────────────────────────────────────── */
+@theme {
+  --color-bg:         #1A0A00;
+  --color-surface:    #2D1200;
+  --color-primary:    #FF6B35;
+  --color-secondary:  #FFD700;
+  --color-accent:     #FF1744;
+  --color-success:    #00E676;
+  --color-text:       #FFF5E1;
+  --color-muted:      #B08060;
+
+  --font-display: 'Luckiest Guy', 'Fredoka One', system-ui, sans-serif;
+  --font-body:    'Nunito', 'Segoe UI', system-ui, sans-serif;
+
+  --shadow-card:     4px 4px 0px #000;
+  --shadow-btn:      3px 3px 0px #000;
+  --shadow-btn-down: 1px 1px 0px #000;
+
+  --animate-dance:       dance 0.5s steps(2, end) infinite;
+  --animate-blink:       blink 1s steps(2, end) infinite;
+  --animate-char-bounce: charBounce 0.6s steps(3, end) infinite;
+  --animate-char-wiggle: charWiggle 0.5s steps(4, end) infinite;
+  --animate-char-spin:   charSpin 1.2s steps(8, end) infinite;
+  --animate-leg-l:       legL 0.6s steps(2, end) infinite;
+  --animate-leg-r:       legR 0.6s steps(2, end) infinite;
+  --animate-whirl:       whirl 2s steps(8, end) infinite;
+}
+
+/* ── Utilitaires CupHead ───────────────────────────────── */
+@utility text-cuphead {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  -webkit-text-stroke: 1.5px #000;
+  paint-order: stroke fill;
+}
+
+@utility text-cuphead-lg {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  -webkit-text-stroke: 2px #000;
+  text-shadow: 4px 4px 0 #000;
+  paint-order: stroke fill;
+}
+
+@utility border-cup {
+  border: 3px solid #000;
+}
+
+@utility border-cup-xl {
+  border: 4px solid #000;
+}
+
+@utility shadow-cup-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-cup-btn {
+  box-shadow: var(--shadow-btn);
+}
+
+@utility btn-press {
+  transition: transform 0.05s, box-shadow 0.05s;
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: var(--shadow-btn-down);
+  }
+}
+
+/* ── Base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+button { cursor: pointer; border: none; outline: none; }
+img, svg { display: block; }

@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { CATEGORIES } from '@/data/categories'
 import { useCategoryMembers, useRecordSwipe, useTodaySwipedIds } from '@/hooks/useSwipes'
 import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
-import styles from './SwipeDeck.module.css'
 
 export function SwipeDeck() {
   const alreadySwiped = useTodaySwipedIds()
@@ -22,22 +21,20 @@ export function SwipeDeck() {
 
   if (!topCategory) {
     return (
-      <div className={styles.wrap}>
-        <div className={styles.empty}>
-          <span className={styles.emptyEmoji}>🎉</span>
-          <h2 className={styles.emptyTitle}>Tout swipé !</h2>
-          <p className={styles.emptyText}>Reviens demain pour de nouveaux choix.</p>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center px-8">
+        <span className="text-[80px] animate-whirl">🎉</span>
+        <h2 className="text-cuphead-lg text-3xl text-secondary">Tout swipé !</h2>
+        <p className="text-muted font-semibold">Reviens demain pour de nouveaux choix.</p>
       </div>
     )
   }
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.deck}>
-        {/* Carte du dessous — pas interactive */}
+    <div className="flex-1 flex items-center justify-center px-4 pb-2">
+      <div className="relative w-full max-w-[360px] h-full">
+        {/* Carte du dessous */}
         {nextCategory && (
-          <div className={styles.cardBack}>
+          <div className="absolute inset-0 scale-[0.94] translate-y-3">
             <CardWithMembers category={nextCategory} onSwipe={() => {}} isTop={false} />
           </div>
         )}
@@ -46,7 +43,7 @@ export function SwipeDeck() {
         <AnimatePresence>
           <motion.div
             key={topCategory.id}
-            style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+            className="absolute inset-0 z-10"
             initial={{ scale: 0.94, y: 12 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ opacity: 0 }}
@@ -64,7 +61,6 @@ export function SwipeDeck() {
   )
 }
 
-// Sous-composant pour charger les membres par catégorie
 function CardWithMembers({
   category,
   onSwipe,

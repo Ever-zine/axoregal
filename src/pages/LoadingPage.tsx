@@ -1,24 +1,31 @@
-import styles from './LoadingPage.module.css'
+import './LoadingPage.scss'
 
 export function LoadingPage() {
   return (
-    <div className={styles.page}>
-      <span className={styles.title}>Axoregal</span>
+    <div className="flex flex-col items-center justify-center h-full bg-bg gap-8">
+      <span className="text-cuphead-lg text-5xl text-secondary">Axoregal</span>
 
-      <div className={styles.characterWrap}>
-        <div className={styles.character}>
-          <div className={styles.smile} />
-        </div>
-        <div className={styles.legs}>
-          <div className={styles.leg} />
-          <div className={styles.leg} />
+      {/* Personnage dansant */}
+      <div className="relative w-[120px] h-[120px]">
+        <div
+          className="character w-[100px] h-[100px] rounded-full border-cup-xl shadow-cup-card absolute top-1/2 left-1/2 bg-primary"
+        />
+        {/* Jambes */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-3">
+          <div className="w-[14px] h-[22px] bg-primary border-cup rounded-[6px_6px_10px_10px] animate-leg-l" />
+          <div className="w-[14px] h-[22px] bg-primary border-cup rounded-[6px_6px_10px_10px] animate-leg-r" />
         </div>
       </div>
 
-      <div className={styles.dots}>
-        <div className={styles.dot} />
-        <div className={styles.dot} />
-        <div className={styles.dot} />
+      {/* Points clignotants */}
+      <div className="flex gap-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-[10px] h-[10px] rounded-full bg-secondary border-[2px] border-black animate-blink"
+            style={{ animationDelay: `${i * 0.33}s` }}
+          />
+        ))}
       </div>
     </div>
   )

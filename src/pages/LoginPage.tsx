@@ -1,14 +1,16 @@
 import { useAuth } from '@/providers/AuthProvider'
-import styles from './LoginPage.module.css'
 
 export function LoginPage() {
   const { login } = useAuth()
 
   return (
-    <div className={styles.page}>
-      <h1 className={styles.logo}>Axoregal</h1>
-      <p className={styles.tagline}>Trouve ton resto avec tes collègues 🍔</p>
-      <button className={styles.btn} onClick={login}>
+    <div className="flex flex-col items-center justify-center h-full bg-bg gap-8 px-8">
+      <h1 className="text-cuphead-lg text-5xl text-secondary text-center leading-tight">Axoregal</h1>
+      <p className="text-muted font-semibold text-center">Trouve ton resto avec tes collègues 🍔</p>
+      <button
+        className="bg-primary text-text font-display text-xl px-10 py-4 border-cup rounded-2xl shadow-cup-btn btn-press uppercase tracking-wider"
+        onClick={login}
+      >
         Se connecter
       </button>
     </div>

@@ -1,0 +1,18 @@
+// SCSS requis : assignation d'animations différentes selon le variant parent
+// (.bounce .body, .wiggle .leg:first-child…) non exprimable en Tailwind inline
+
+.bounce {
+  .body { animation: charBounce 0.6s steps(3, end) infinite; }
+  .leg:first-child { animation: legL 0.6s steps(2, end) infinite; }
+  .leg:last-child  { animation: legR 0.6s steps(2, end) infinite; }
+}
+
+.wiggle {
+  .body { animation: charWiggle 0.5s steps(4, end) infinite; }
+  .leg:first-child { animation: legL 0.5s steps(2, end) infinite; }
+  .leg:last-child  { animation: legR 0.5s steps(2, end) infinite reverse; }
+}
+
+.spin {
+  .body { animation: charSpin 1.2s steps(8, end) infinite; }
+}

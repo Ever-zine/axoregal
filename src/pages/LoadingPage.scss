@@ -1,0 +1,28 @@
+// SCSS requis : le personnage utilise translate(-50%,-50%) dans l'animation
+// ce qui casse si on essaie de combiner avec les classes Tailwind translate
+
+.character {
+  animation: dance 0.5s steps(2, end) infinite;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 28%;
+    left: 15%;
+    width: 28%;
+    height: 22%;
+    background: #000;
+    border-radius: 50%;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 28%;
+    right: 15%;
+    width: 28%;
+    height: 22%;
+    background: #000;
+    border-radius: 50%;
+  }
+}
