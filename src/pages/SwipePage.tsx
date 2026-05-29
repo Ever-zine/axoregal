@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/providers/AuthProvider'
 import { useGroup } from '@/providers/GroupProvider'
 import { useMatchWindow } from '@/hooks/useMatchWindow'
+import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { SwipeDeck } from '@/components/SwipeDeck/SwipeDeck'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 
@@ -17,6 +18,7 @@ export function SwipePage() {
   }, [group, navigate])
 
   return (
+    <PageTransition>
     <div className="flex flex-col h-full bg-bg overflow-hidden">
       <header className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b-[2px] border-black">
         <span className="text-cuphead-lg text-2xl text-secondary">Axoregal</span>
@@ -48,5 +50,6 @@ export function SwipePage() {
       <SwipeDeck />
       <BottomNav />
     </div>
+    </PageTransition>
   )
 }

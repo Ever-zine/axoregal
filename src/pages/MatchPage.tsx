@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { CATEGORIES } from '@/data/categories'
 import { fetchGroupWithMembers } from '@/services/matching'
 import { FoodCharacter } from '@/components/FoodCharacter/FoodCharacter'
+import { PageTransition } from '@/components/PageTransition/PageTransition'
 import { LoadingPage } from './LoadingPage'
 import './MatchPage.scss'
 
@@ -48,6 +49,7 @@ export function MatchPage() {
   const category = CATEGORIES.find((c) => c.id === group.category_id) ?? CATEGORIES[0]
 
   return (
+    <PageTransition variant="pop">
     <div
       className="flex flex-col items-center justify-between h-full px-6 py-10 overflow-hidden relative"
       style={{ backgroundColor: category.bgColor }}
@@ -126,5 +128,6 @@ export function MatchPage() {
         </button>
       </div>
     </div>
+    </PageTransition>
   )
 }

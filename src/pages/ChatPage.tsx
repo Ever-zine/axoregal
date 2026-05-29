@@ -4,6 +4,7 @@ import { useGroup } from '@/providers/GroupProvider'
 import { useChat, useScrollToBottom } from '@/hooks/useChat'
 import { CATEGORIES } from '@/data/categories'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
+import { PageTransition } from '@/components/PageTransition/PageTransition'
 import type { ChatMessage } from '@/services/chat'
 import './ChatPage.scss'
 
@@ -33,6 +34,7 @@ export function ChatPage() {
   }
 
   return (
+    <PageTransition>
     <div className="flex flex-col h-full bg-bg overflow-hidden">
       {/* Header */}
       <header className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b-[2px] border-black bg-surface">
@@ -115,6 +117,7 @@ export function ChatPage() {
 
       <BottomNav />
     </div>
+    </PageTransition>
   )
 }
 

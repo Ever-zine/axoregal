@@ -6,6 +6,7 @@ import { CATEGORIES } from '@/data/categories'
 import { SearchWizard } from '@/components/SearchWizard/SearchWizard'
 import { RestaurantCard } from '@/components/RestaurantCard/RestaurantCard'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
+import { PageTransition } from '@/components/PageTransition/PageTransition'
 
 type View = 'wizard' | 'results'
 
@@ -24,6 +25,7 @@ export function SearchPage() {
   const results = filters ? searchRestaurants(filters) : []
 
   return (
+    <PageTransition>
     <div className="flex flex-col h-full bg-bg overflow-hidden">
       <header className="flex-shrink-0 flex items-center gap-3 px-5 py-4 border-b-[2px] border-black">
         <span className="text-cuphead-lg text-2xl text-secondary flex-1">
@@ -95,5 +97,6 @@ export function SearchPage() {
 
       <BottomNav />
     </div>
+    </PageTransition>
   )
 }

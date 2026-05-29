@@ -1,0 +1,214 @@
+// SCSS requis : accessoires des personnages.
+// Les formes CSS (chapeaux, bandeau, lunettes…) nécessitent ::before/::after,
+// nth-child, et des calculs de positionnement relatifs au parent — non
+// exprimables avec les seules classes Tailwind.
+
+// ── Chef hat (Burger) ──────────────────────────────────────────────────────
+.accessory-chef-hat {
+  position: absolute;
+  bottom: calc(100% - 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &__top {
+    width: 44px;
+    height: 34px;
+    background: #fff;
+    border: 3px solid #000;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+  }
+  &__brim {
+    width: 68px;
+    height: 11px;
+    background: #fff;
+    border: 3px solid #000;
+    border-radius: 4px;
+    margin-top: -1px;
+  }
+}
+
+// ── Headband (Sushi) ───────────────────────────────────────────────────────
+.accessory-headband {
+  position: absolute;
+  top: 12%;
+  left: 6%;
+  right: 6%;
+  height: 18px;
+  background: #cc0055;
+  border: 3px solid #000;
+  border-radius: 999px;
+  z-index: 2;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: #cc0055;
+    border: 3px solid #000;
+    border-radius: 50%;
+  }
+}
+
+// ── Glasses (Pizza) ────────────────────────────────────────────────────────
+.accessory-glasses {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 2;
+
+  &__lens {
+    width: 28px;
+    height: 22px;
+    border: 3px solid #000;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+  }
+  &__bridge {
+    width: 9px;
+    height: 3px;
+    background: #000;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+// ── Sombrero (Tacos) ───────────────────────────────────────────────────────
+.accessory-sombrero {
+  position: absolute;
+  bottom: calc(100% - 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &__crown {
+    width: 46px;
+    height: 26px;
+    background: #00b050;
+    border: 3px solid #000;
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+  }
+  &__brim {
+    width: 100px;
+    height: 12px;
+    background: #00b050;
+    border: 3px solid #000;
+    border-radius: 999px;
+    margin-top: -1px;
+  }
+}
+
+// ── Steam wisps (Ramen) ────────────────────────────────────────────────────
+.accessory-steam {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+
+  span {
+    display: block;
+    width: 7px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    animation: steamRise 1.2s steps(4, end) infinite;
+
+    &:nth-child(1) { height: 18px; animation-delay: 0s; }
+    &:nth-child(2) { height: 24px; animation-delay: 0.4s; }
+    &:nth-child(3) { height: 16px; animation-delay: 0.8s; }
+  }
+}
+
+// ── Bow (Salade) ───────────────────────────────────────────────────────────
+.accessory-bow {
+  position: absolute;
+  bottom: calc(100% - 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  &__wing {
+    width: 22px;
+    height: 16px;
+    background: #00c853;
+    border: 3px solid #000;
+    border-radius: 50%;
+  }
+  &__knot {
+    width: 12px;
+    height: 12px;
+    background: #00c853;
+    border: 3px solid #000;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+// ── Comb / Mohawk (Poulet) ─────────────────────────────────────────────────
+.accessory-comb {
+  position: absolute;
+  bottom: calc(100% - 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+
+  span {
+    display: block;
+    width: 10px;
+    background: #dd2020;
+    border: 2px solid #000;
+    border-radius: 4px 4px 0 0;
+
+    &:nth-child(1) { height: 14px; }
+    &:nth-child(2) { height: 22px; }
+    &:nth-child(3) { height: 30px; }
+    &:nth-child(4) { height: 22px; }
+    &:nth-child(5) { height: 14px; }
+  }
+}
+
+// ── Mustache (Steak) ───────────────────────────────────────────────────────
+.accessory-mustache {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  z-index: 2;
+
+  span {
+    display: block;
+    width: 26px;
+    height: 13px;
+    background: #8b0000;
+    border: 2px solid #000;
+
+    &:first-child {
+      border-radius: 60% 0 50% 50% / 80% 0 40% 40%;
+    }
+    &:last-child {
+      border-radius: 0 60% 50% 50% / 0 80% 40% 40%;
+    }
+  }
+}
