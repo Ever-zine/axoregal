@@ -4,7 +4,10 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 
+const base = process.env.GITHUB_PAGES === 'true' ? '/axoregal/' : '/'
+
 export default defineConfig({
+  base,
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
@@ -30,19 +33,20 @@ export default defineConfig({
         background_color: '#1A0A00',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-          { src: '/icons/icon.svg',     sizes: 'any',     type: 'image/svg+xml' },
+          { src: `${base}icons/icon-192.png`, sizes: '192x192', type: 'image/png' },
+          { src: `${base}icons/icon-512.png`, sizes: '512x512', type: 'image/png' },
+          { src: `${base}icons/icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: `${base}icons/icon.svg`,     sizes: 'any',     type: 'image/svg+xml' },
         ],
       },
 
       workbox: {
         // Page offline servie quand la navigation échoue sans réseau
         offlineGoogleAnalytics: false,
-        navigateFallback: '/offline.html',
+        navigateFallback: `${base}offline.html`,
         navigateFallbackDenylist: [/^\/auth/, /^\/api/],
 
         // PWA-03 : stratégies de cache runtime
