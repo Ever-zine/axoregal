@@ -1,29 +1,67 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CATEGORIES } from '@/data/categories'
-import { useCategoryMembers, useRecordSwipe, useTodaySwipedIds } from '@/hooks/useSwipes'
+import { useAvailableGroups, useRecordSwipe, useJoinGroup, type AvailableGroup } from '@/hooks/useSwipes'
+import { useGroup } from '@/providers/GroupProvider'
+import { useAuth } from '@/providers/AuthProvider'
 import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
 
 export function SwipeDeck() {
-  const alreadySwiped = useTodaySwipedIds()
-  const remaining = CATEGORIES.filter((c) => !alreadySwiped.has(c.id))
+  const { user } = useAuth()
+  const { group: myGroup } = useGroup()
+  const { data: availableGroups = [], isLoading } = useAvailableGroups()
   const [localSwiped, setLocalSwiped] = useState<string[]>([])
   const { mutate: recordSwipe } = useRecordSwipe()
+  const { mutate: joinGroup } = useJoinGroup()
+  const navigate = useNavigate()
 
-  const queue = remaining.filter((c) => !localSwiped.includes(c.id))
-  const topCategory = queue[0]
-
-  function handleSwipe(categoryId: string, direction: 'left' | 'right') {
-    setLocalSwiped((prev) => [...prev, categoryId])
-    recordSwipe({ categoryId, direction })
+  if (myGroup) {
+    return (
+      <div className="figma-main swipe-empty">
+        <span className="text-[80px]">🎉</span>
+        <h2 className="figma-title text-3xl">Tu es dans un groupe !</h2>
+        <p className="text-lg font-semibold text-muted">«{myGroup.name}»</p>
+        <button
+          className="figma-button bg-success px-8 text-lg text-text"
+          onClick={() => navigate('/chat')}
+        >
+          Aller au chat
+        </button>
+      </div>
+    )
   }
 
-  if (!topCategory) {
+  const queue = availableGroups.filter((g) => !localSwiped.includes(g.id))
+  const topGroup = queue[0]
+  const nextGroup = queue[1]
+
+  function handleSwipe(groupId: string, direction: 'left' | 'right') {
+    setLocalSwiped((prev) => [...prev, groupId])
+    recordSwipe({ groupId, direction })
+    if (direction === 'right' && user) joinGroup(groupId)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="figma-main swipe-empty">
+        <span className="font-semibold text-muted">Chargement des groupes...</span>
+      </div>
+    )
+  }
+
+  if (!topGroup) {
     return (
       <div className="figma-main swipe-empty">
         <span className="text-[80px] animate-whirl">✦</span>
-        <h2 className="figma-title text-4xl">Tout swipé !</h2>
-        <p className="font-semibold text-muted">Reviens demain pour de nouveaux choix.</p>
+        <h2 className="figma-title text-3xl">Aucun groupe dispo</h2>
+        <p className="font-semibold text-muted">Sois le premier à en créer un !</p>
+        <button
+          className="figma-button bg-primary px-8 text-lg text-surface"
+          onClick={() => navigate('/create-group')}
+        >
+          Créer un groupe
+        </button>
       </div>
     )
   }
@@ -31,39 +69,44 @@ export function SwipeDeck() {
   return (
     <div className="figma-main swipe-deck figma-scroll">
       <div className="swipe-deck-inner">
-      <div className="swipe-card-stage">
-        {/* Carte du dessus */}
-        <AnimatePresence>
-          <motion.div
-            key={topCategory.id}
-            className="absolute inset-0 z-10"
-            initial={{ scale: 0.94, y: 12 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          >
-            <CardWithMembers
-              category={topCategory}
-              onSwipe={(dir) => handleSwipe(topCategory.id, dir)}
-              isTop
-            />
-          </motion.div>
-        </AnimatePresence>
-      </div>
+        <div className="swipe-card-stage">
+          {nextGroup && (
+            <div className="absolute inset-0 scale-[0.94] translate-y-3">
+              <GroupCard group={nextGroup} onSwipe={() => {}} isTop={false} />
+            </div>
+          )}
+
+          <AnimatePresence>
+            <motion.div
+              key={topGroup.id}
+              className="absolute inset-0 z-10"
+              initial={{ scale: 0.94, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            >
+              <GroupCard
+                group={topGroup}
+                onSwipe={(dir) => handleSwipe(topGroup.id, dir)}
+                isTop
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   )
 }
 
-function CardWithMembers({
-  category,
+function GroupCard({
+  group,
   onSwipe,
   isTop,
 }: {
-  category: (typeof CATEGORIES)[0]
+  group: AvailableGroup
   onSwipe: (dir: 'left' | 'right') => void
   isTop: boolean
 }) {
-  const { data: members = [] } = useCategoryMembers(category.id)
-  return <SwipeCard category={category} members={members} onSwipe={onSwipe} isTop={isTop} />
+  const category = CATEGORIES.find((c) => c.id === group.category_id) ?? CATEGORIES[0]
+  return <SwipeCard group={group} category={category} onSwipe={onSwipe} isTop={isTop} />
 }

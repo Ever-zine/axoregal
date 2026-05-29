@@ -10,10 +10,10 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
-  { id: 'swipe',    label: 'Swipe',    icon: '♨', path: '/swipe' },
-  { id: 'surprise', label: 'Hasard',   icon: '✦', path: '/surprise' },
-  { id: 'chat',     label: 'Chat',     icon: '♨', path: '/chat', requiresGroup: true },
-  { id: 'search',   label: 'Resto',    icon: '✦', path: '/search' },
+  { id: 'swipe',  label: 'Swipe', icon: '♨', path: '/swipe' },
+  { id: 'create', label: 'Créer', icon: '✚', path: '/create-group' },
+  { id: 'chat',   label: 'Chat',  icon: '♨', path: '/chat', requiresGroup: true },
+  { id: 'search', label: 'Resto', icon: '✦', path: '/search' },
 ]
 
 export function BottomNav() {
@@ -23,7 +23,7 @@ export function BottomNav() {
 
   return (
     <nav className="figma-safe-bottom bottom-nav z-[100] mx-auto flex w-full max-w-[430px] flex-shrink-0 border-t-[3px] border-black bg-surface">
-      {ITEMS.map((item, i) => {
+      {ITEMS.map((item) => {
         const isDisabled = item.requiresGroup && !group
         const isActive = pathname.startsWith(item.path)
 
@@ -33,8 +33,7 @@ export function BottomNav() {
             className={[
               'relative flex flex-1 flex-col items-center justify-center gap-[3px]',
               'text-[10px] font-bold',
-              i < ITEMS.length - 1 ? '' : '',
-              isActive   ? 'text-primary' : 'text-text',
+              isActive ? 'text-primary' : 'text-text',
               isDisabled ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer',
             ].join(' ')}
             onClick={() => !isDisabled && navigate(item.path)}

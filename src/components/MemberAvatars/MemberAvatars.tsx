@@ -1,7 +1,7 @@
-import type { SwipeMember } from '@/hooks/useSwipes'
+import type { GroupMember } from '@/services/matching'
 
 interface Props {
-  members: SwipeMember[]
+  members: GroupMember[]
   max?: number
 }
 

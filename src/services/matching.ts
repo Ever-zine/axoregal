@@ -8,6 +8,7 @@ export interface GroupMember {
 
 export interface MatchGroup {
   id: string
+  name: string
   category_id: string
   session_date: string
   members: GroupMember[]
@@ -16,7 +17,7 @@ export interface MatchGroup {
 export async function getMyTodayGroup(userId: string): Promise<MatchGroup | null> {
   const { data, error } = await supabase
     .from('group_members')
-    .select('group_id, groups(id, category_id, session_date)')
+    .select('group_id, groups(id, name, category_id, session_date)')
     .eq('user_id', userId)
     .eq('groups.session_date', today())
     .maybeSingle()
@@ -24,14 +25,14 @@ export async function getMyTodayGroup(userId: string): Promise<MatchGroup | null
   if (error) throw error
   if (!data?.groups) return null
 
-  const group = data.groups as unknown as { id: string; category_id: string; session_date: string }
+  const group = data.groups as unknown as { id: string; name: string; category_id: string; session_date: string }
   return fetchGroupWithMembers(group.id)
 }
 
 export async function fetchGroupWithMembers(groupId: string): Promise<MatchGroup> {
   const { data: group, error: gErr } = await supabase
     .from('groups')
-    .select('id, category_id, session_date')
+    .select('id, name, category_id, session_date')
     .eq('id', groupId)
     .single()
   if (gErr) throw gErr
@@ -50,11 +51,23 @@ export async function fetchGroupWithMembers(groupId: string): Promise<MatchGroup
   }
 }
 
-export async function joinRandomGroup(userId: string): Promise<MatchGroup> {
+export async function createGroup(userId: string, name: string, categoryId: string): Promise<MatchGroup> {
+  const { data, error } = await supabase.rpc('create_group', {
+    p_user_id: userId,
+    p_name: name,
+    p_category: categoryId,
+  })
+  if (error) throw error
+  const row = (data as { group_id: string }[])[0]
+  return fetchGroupWithMembers(row.group_id)
+}
+
+export async function joinRandomGroup(userId: string): Promise<MatchGroup | null> {
   const { data, error } = await supabase.rpc('join_random_group', { p_user_id: userId })
   if (error) throw error
-  const row = (data as { group_id: string; category_id: string }[])[0]
-  return fetchGroupWithMembers(row.group_id)
+  const rows = data as { group_id: string; category_id: string; group_name: string }[]
+  if (!rows || rows.length === 0) return null
+  return fetchGroupWithMembers(rows[0].group_id)
 }
 
 function today() {

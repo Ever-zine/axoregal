@@ -40,9 +40,9 @@ export function ChatPage() {
       <header className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b-[2px] border-black bg-surface">
         <span className="text-3xl">{category.emoji}</span>
         <div className="flex-1 min-w-0">
-          <span className="text-cuphead text-base text-secondary block truncate">{category.name}</span>
+          <span className="text-cuphead text-base text-secondary block truncate">{group.name}</span>
           <span className="text-xs text-muted">
-            {group.members.length} membre{group.members.length !== 1 ? 's' : ''}
+            {category.emoji} {category.name} · {group.members.length} membre{group.members.length !== 1 ? 's' : ''}
           </span>
         </div>
         {/* Avatars membres en miniature */}

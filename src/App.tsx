@@ -8,6 +8,7 @@ import { AuthCallbackPage } from '@/pages/AuthCallbackPage'
 import { SwipePage } from '@/pages/SwipePage'
 import { MatchPage } from '@/pages/MatchPage'
 import { SurprisePage } from '@/pages/SurprisePage'
+import { CreateGroupPage } from '@/pages/CreateGroupPage'
 import { ChatPage } from '@/pages/ChatPage'
 import { SearchPage } from '@/pages/SearchPage'
 import { InstallBanner } from '@/components/InstallBanner/InstallBanner'
@@ -35,6 +36,7 @@ export function App() {
           <Route path="/swipe"          element={<ProtectedRoute><SwipePage /></ProtectedRoute>} />
           <Route path="/match/:groupId" element={<ProtectedRoute><MatchPage /></ProtectedRoute>} />
           <Route path="/surprise"       element={<ProtectedRoute><SurprisePage /></ProtectedRoute>} />
+          <Route path="/create-group"   element={<ProtectedRoute><CreateGroupPage /></ProtectedRoute>} />
           <Route path="/chat"           element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/search"         element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
           <Route

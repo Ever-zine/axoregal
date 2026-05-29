@@ -258,6 +258,23 @@ img, svg { display: block; }
   overflow-wrap: anywhere;
 }
 
+.swipe-card-heading {
+  z-index: 10;
+  display: flex;
+  max-width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.swipe-card-subtitle {
+  color: var(--color-muted);
+  font-size: clamp(0.82rem, 3.3vw, 0.95rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .swipe-mascot-wrap {
   display: flex;
   min-height: 0;
@@ -265,6 +282,15 @@ img, svg { display: block; }
   align-items: center;
   justify-content: center;
   padding-block: clamp(12px, 3dvh, 24px);
+}
+
+.swipe-mascot-wrap .body {
+  width: clamp(104px, 32vw, 140px);
+  height: clamp(104px, 32vw, 140px);
+}
+
+.swipe-mascot-wrap .body > span {
+  font-size: clamp(2.8rem, 14vw, 4rem);
 }
 
 .swipe-mascot {

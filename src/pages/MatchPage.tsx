@@ -70,6 +70,7 @@ export function MatchPage() {
         >
           Match !
         </span>
+        <span className="font-body text-base text-muted text-center">«{group.name}»</span>
       </div>
 
       {/* Personnage */}
@@ -120,12 +121,6 @@ export function MatchPage() {
           Aller au chat 💬
         </button>
 
-        <button
-          className="text-muted font-semibold text-sm underline"
-          onClick={() => navigate('/swipe')}
-        >
-          Continuer à swiper
-        </button>
       </div>
     </div>
     </PageTransition>
