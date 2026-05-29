@@ -6,7 +6,7 @@ import { useAvailableGroups, useRecordSwipe, useJoinGroup, type AvailableGroup }
 import { useGroup } from '@/providers/GroupProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { SwipeCard } from '@/components/SwipeCard/SwipeCard'
-import soundGood from '@/assets/Good.m4a'
+import soundGood from '@/assets/Wouhou.m4a'
 import soundNul from '@/assets/Pinpin.m4a'
 
 export function SwipeDeck() {
@@ -64,6 +64,7 @@ export function SwipeDeck() {
       joinGroup(groupId)
       const audio = new Audio(soundGood)
       audio.play()
+      navigate(/match/ + groupId)
     }
     else
     {

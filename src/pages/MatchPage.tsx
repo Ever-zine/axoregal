@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CATEGORIES } from '@/data/categories'
@@ -36,9 +36,20 @@ function Sparkles() {
   )
 }
 
-export function MatchPage() {
+const audioRef = useRef<HTMLAudioElement | null>(null)
+
+useEffect(() => {
   const audio = new Audio(soundMatch)
-      audio.play()
+  audioRef.current = audio
+  audio.play()
+
+  return () => {
+    audio.pause()
+    audio.currentTime = 0
+  }
+}, [])
+
+export function MatchPage() {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
   const { leaveGroup } = useGroup()
