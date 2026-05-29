@@ -43,6 +43,7 @@ export function App() {
             path="/"
             element={isAuthenticated ? <Navigate to="/splash" replace /> : <Navigate to="/login" replace />}
           />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
 
