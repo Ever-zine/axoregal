@@ -6,16 +6,11 @@ import soundTitre from '@/assets/Titre.m4a'
 export function LoadingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  useEffect(() => {
-    const audio = new Audio(soundTitre)
-    audioRef.current = audio
-    audio.play().catch(() => {}) // .catch() évite l'erreur si le navigateur bloque l'autoplay
-
-    return () => {
-      audio.pause()
-      audio.currentTime = 0
-    }
-  }, [])
+useEffect(() => {
+  const audio = new Audio(soundTitre)
+  audioRef.current = audio
+  audio.play().catch(() => {})
+}, [])
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full bg-bg gap-8 overflow-hidden">
